@@ -7,7 +7,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from PIL import Image
 from rest_framework.test import APIClient
-from .models import Campus, RoommateProfile, User
+from .models import City, RoommateProfile, User
 
 TEMP_MEDIA = tempfile.mkdtemp()
 
@@ -64,6 +64,16 @@ class AuthTests(TestCase):
         })
         self.assertEqual(response.status_code, 401)
 
+    def test_refresh_returns_new_access(self):
+        self.client.post(reverse('accounts:register'), self.register_data)
+        login = self.client.post(reverse('accounts:login'), {
+            'email': 'student@colohouse.com',
+            'password': 'StrongPass123!',
+        })
+        response = self.client.post(reverse('accounts:token_refresh'), {'refresh': login.data['refresh']})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('access', response.data)
+
     def test_me_requires_token(self):
         response = self.client.get(reverse('accounts:me'))
         self.assertEqual(response.status_code, 401)
@@ -91,8 +101,8 @@ class ProfileTests(TestCase):
         self.user = User.objects.create_user(
             'student@colohouse.com', 'StrongPass123!', first_name='Student', last_name='Test'
         )
-        self.campus = Campus.objects.create(
-            name='Main Campus', university='Test University', latitude=36.8, longitude=10.18
+        self.city = City.objects.create(
+            name='Tunis', region='Tunis', latitude=36.8, longitude=10.18
         )
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
@@ -101,8 +111,9 @@ class ProfileTests(TestCase):
         response = self.client.get(reverse('accounts:me'))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['first_name'], 'Student')
-        self.assertIsNone(response.data['campus'])
+        self.assertIsNone(response.data['city'])
         self.assertIsNone(response.data['profile_picture'])
+        self.assertFalse(response.data['is_verified'])
 
     def test_profile_requires_token(self):
         response = APIClient().get(reverse('accounts:me'))
@@ -112,32 +123,38 @@ class ProfileTests(TestCase):
         response = self.client.patch(reverse('accounts:me'), {
             'phone': '+21612345678',
             'bio': 'Calm student, likes cooking.',
-            'university': 'Test University',
-            'field_of_study': 'Computer Science',
-            'campus_id': self.campus.id,
+            'institution': 'Test University',
+            'occupation': 'Computer Science student',
+            'city_id': self.city.id,
         }, format='json')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['campus']['name'], 'Main Campus')
+        self.assertEqual(response.data['city']['name'], 'Tunis')
         self.user.refresh_from_db()
         self.assertEqual(self.user.phone, '+21612345678')
-        self.assertEqual(self.user.field_of_study, 'Computer Science')
-        self.assertEqual(self.user.campus, self.campus)
+        self.assertEqual(self.user.institution, 'Test University')
+        self.assertEqual(self.user.occupation, 'Computer Science student')
+        self.assertEqual(self.user.city, self.city)
 
-    def test_remove_campus(self):
-        self.user.campus = self.campus
+    def test_remove_city(self):
+        self.user.city = self.city
         self.user.save()
-        response = self.client.patch(reverse('accounts:me'), {'campus_id': None}, format='json')
+        response = self.client.patch(reverse('accounts:me'), {'city_id': None}, format='json')
         self.assertEqual(response.status_code, 200)
-        self.assertIsNone(response.data['campus'])
+        self.assertIsNone(response.data['city'])
 
-    def test_unknown_campus_is_rejected(self):
-        response = self.client.patch(reverse('accounts:me'), {'campus_id': 999}, format='json')
+    def test_unknown_city_is_rejected(self):
+        response = self.client.patch(reverse('accounts:me'), {'city_id': 999}, format='json')
         self.assertEqual(response.status_code, 400)
 
     def test_email_cannot_be_changed(self):
         self.client.patch(reverse('accounts:me'), {'email': 'other@colohouse.com'}, format='json')
         self.user.refresh_from_db()
         self.assertEqual(self.user.email, 'student@colohouse.com')
+
+    def test_user_cannot_verify_himself(self):
+        self.client.patch(reverse('accounts:me'), {'is_verified': True}, format='json')
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.is_verified)
 
     def test_invalid_phone_is_rejected(self):
         response = self.client.patch(reverse('accounts:me'), {'phone': 'abc'}, format='json')
@@ -197,7 +214,7 @@ class PreferencesTests(TestCase):
             'budget': 450,
             'preferred_room_type': 'private',
             'move_in_date': '2026-11-01',
-            'max_distance_to_campus': 3.5,
+            'max_distance_to_center': 3.5,
             'sleep_schedule': 'late',
             'noise_tolerance': 2,
             'cleanliness': 5,
@@ -208,12 +225,19 @@ class PreferencesTests(TestCase):
         self.assertEqual(response.status_code, 200)
         profile = RoommateProfile.objects.get(user=self.user)
         self.assertEqual(profile.budget, 450)
+        self.assertEqual(profile.max_distance_to_center, 3.5)
         self.assertEqual(profile.sleep_schedule, 'late')
         self.assertEqual(profile.cleanliness, 5)
         self.assertTrue(profile.looking_for_room)
 
     def test_cleanliness_out_of_range_is_rejected(self):
         response = self.client.patch(reverse('accounts:preferences'), {'cleanliness': 6}, format='json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_negative_distance_is_rejected(self):
+        response = self.client.patch(
+            reverse('accounts:preferences'), {'max_distance_to_center': -1}, format='json'
+        )
         self.assertEqual(response.status_code, 400)
 
     def test_invalid_sleep_schedule_is_rejected(self):
@@ -227,10 +251,10 @@ class PreferencesTests(TestCase):
         self.assertEqual(response.status_code, 401)
 
 
-class CampusTests(TestCase):
-    def test_campus_list_is_public(self):
-        Campus.objects.create(name='Main Campus', university='Test University', latitude=36.8, longitude=10.18)
-        response = APIClient().get(reverse('accounts:campuses'))
+class CityTests(TestCase):
+    def test_city_list_is_public(self):
+        City.objects.create(name='Tunis', region='Tunis', latitude=36.8, longitude=10.18)
+        response = APIClient().get(reverse('accounts:cities'))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['name'], 'Main Campus')
+        self.assertEqual(response.data[0]['name'], 'Tunis')
