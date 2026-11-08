@@ -9,6 +9,16 @@ class CitySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'region', 'address', 'latitude', 'longitude']
 
 
+class PublicUserSerializer(serializers.ModelSerializer):
+    """What other users can see about someone (no email, no phone)."""
+    class Meta:
+        model = User
+        fields = [
+            'id', 'first_name', 'last_name', 'profile_picture', 'bio',
+            'institution', 'occupation', 'is_verified',
+        ]
+
+
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, validators=[validate_password])
 
