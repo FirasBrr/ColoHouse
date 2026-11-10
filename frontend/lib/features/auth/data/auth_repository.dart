@@ -2,6 +2,7 @@ import '../../../core/storage/secure_storage.dart';
 import 'auth_api.dart';
 import '../models/user.dart';
 import '../../profile/models/roommate_preferences.dart';
+import '../../housing/models/listing.dart';
 
 class AuthRepository {
   final AuthApi api;
@@ -75,4 +76,6 @@ Future<RoommatePreferences> updatePreferences(
     api.updatePreferences(changes);
 
 Future<List<City>> listCities() => api.listCities();
+Future<List<HousingListing>> getListings({String? query}) => api.getListings(query: query);
+
 }

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import '../../../core/errors/auth_exception.dart';
 import '../models/user.dart';
 import '../../profile/models/roommate_preferences.dart';
+import '../../housing/models/listing.dart';
 
 class AuthApi {
   final Dio dio;
@@ -66,7 +67,19 @@ class AuthApi {
       throw AuthException(_errorMessage(e));
     }
   }
-
+//listing houses 
+Future<List<HousingListing>> getListings({String? query}) async {
+  try {
+    final res = await dio.get('/listings/', queryParameters: {
+      if (query != null && query.isNotEmpty) 'q': query,
+    });
+    return (res.data as List)
+        .map((e) => HousingListing.fromJson(e as Map<String, dynamic>))
+        .toList();
+  } on DioException catch (e) {
+    throw AuthException(_errorMessage(e));
+  }
+}
   // ---------------- PROFILE ----------------
 
   Future<User> updateProfile(Map<String, dynamic> changes) async {

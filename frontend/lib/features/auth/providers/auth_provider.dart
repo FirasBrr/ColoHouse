@@ -5,6 +5,8 @@ import '../data/auth_api.dart';
 import '../data/auth_repository.dart';
 import '../models/user.dart';
 import '../../profile/models/roommate_preferences.dart';  
+import '../../housing/models/listing.dart';
+
 // --- dependency injection ---
 final storageProvider = Provider<SecureStorage>((_) => SecureStorage());
 
@@ -88,4 +90,8 @@ final cityListProvider = FutureProvider<List<City>>((ref) async {
 
 final preferencesProvider = FutureProvider<RoommatePreferences>((ref) async {
   return ref.read(authRepoProvider).getPreferences();
+});
+
+final listingsProvider = FutureProvider.autoDispose.family<List<HousingListing>, String>((ref, query) async {
+  return ref.read(authRepoProvider).getListings(query: query);
 });
