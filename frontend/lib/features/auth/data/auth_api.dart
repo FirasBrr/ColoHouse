@@ -107,6 +107,14 @@ class AuthApi {
       throw AuthException(_errorMessage(e));
     }
   }
+    // Delete a specific photo from a listing
+  Future<void> deleteListingPhoto(int listingId, int photoId) async {
+    try {
+      await dio.delete('/listings/$listingId/photos/$photoId/');
+    } on DioException catch (e) {
+      throw AuthException(_errorMessage(e));
+    }
+  }
     // Upload multiple photos for a listing
   Future<void> uploadMultiplePhotos(int listingId, List<String> filePaths) async {
     for (final path in filePaths) {

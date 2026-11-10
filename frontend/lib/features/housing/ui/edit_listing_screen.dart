@@ -26,6 +26,9 @@ class _EditListingScreenState extends ConsumerState<EditListingScreen> {
   late TextEditingController _rules;
   
   late bool _isActive;
+  
+  // Local state to track photos so we can remove them from the UI
+  late List<ListingPhoto> _currentPhotos;
 
   bool _loading = false;
   String? _error;
@@ -40,6 +43,7 @@ class _EditListingScreenState extends ConsumerState<EditListingScreen> {
     _address = TextEditingController(text: widget.listing.address ?? '');
     _rules = TextEditingController(text: widget.listing.rules);
     _isActive = widget.listing.status == 'active';
+    _currentPhotos = List.from(widget.listing.photos); // Load existing photos
   }
 
   @override
@@ -47,6 +51,51 @@ class _EditListingScreenState extends ConsumerState<EditListingScreen> {
     _title.dispose(); _desc.dispose(); _rent.dispose();
     _deposit.dispose(); _address.dispose(); _rules.dispose();
     super.dispose();
+  }
+
+  Future<void> _deletePhoto(int photoId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Photo?'),
+        content: const Text('Are you sure you want to remove this photo?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () => Navigator.pop(ctx, true), 
+            child: const Text('Delete')
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await ref.read(authRepoProvider).api.deleteListingPhoto(widget.listing.id, photoId);
+      
+      // Remove from local list to update UI immediately
+      setState(() {
+        _currentPhotos.removeWhere((p) => p.id == photoId);
+      });
+      
+      // Refresh the main details screen and listings feed
+      ref.invalidate(listingDetailsProvider(widget.listing.id));
+      ref.invalidate(listingsProvider('')); // Reverted back to empty string
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Photo deleted')),
+        );
+      }
+    } on AuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
+        );
+      }
+    }
   }
 
   Future<void> _save() async {
@@ -65,7 +114,7 @@ class _EditListingScreenState extends ConsumerState<EditListingScreen> {
         'status': _isActive ? 'active' : 'paused',
       });
 
-      ref.invalidate(listingsProvider('')); 
+      ref.invalidate(listingsProvider('')); // Reverted back to empty string
       ref.invalidate(listingDetailsProvider(widget.listing.id));
       ref.invalidate(myListingsProvider);
 
@@ -104,6 +153,57 @@ class _EditListingScreenState extends ConsumerState<EditListingScreen> {
                     child: Text(_error!, style: const TextStyle(color: AppColors.error)),
                   ),
                   const SizedBox(height: 16),
+                ],
+
+                // ===== CURRENT PHOTOS SECTION =====
+                if (_currentPhotos.isNotEmpty) ...[
+                  const Text('Current Photos', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  const Text('Tap the X to remove a photo', style: TextStyle(fontSize: 12, color: AppColors.outline)),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 100,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _currentPhotos.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 12),
+                      itemBuilder: (context, index) {
+                        final photo = _currentPhotos[index];
+                        return Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(
+                                photo.image,
+                                width: 100, height: 100, fit: BoxFit.cover,
+                              ),
+                            ),
+                            if (index == 0)
+                              Positioned(
+                                bottom: 4, left: 4,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(6)),
+                                  child: const Text('Cover', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                            Positioned(
+                              top: 4, right: 4,
+                              child: InkWell(
+                                onTap: () => _deletePhoto(photo.id),
+                                child: Container(
+                                  decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+                                  padding: const EdgeInsets.all(4),
+                                  child: const Icon(Icons.close, size: 14, color: Colors.white),
+                                ),
+                              ),
+                            )
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                 ],
 
                 // Status Toggle
