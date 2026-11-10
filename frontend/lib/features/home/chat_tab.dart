@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import 'requests_tab.dart';
+import 'sent_requests_tab.dart';
 
 class ChatTab extends StatelessWidget {
   const ChatTab({super.key});
@@ -8,7 +9,7 @@ class ChatTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3, // Changed to 3
       child: Scaffold(
         backgroundColor: AppColors.surface,
         appBar: AppBar(
@@ -18,14 +19,16 @@ class ChatTab extends StatelessWidget {
             labelColor: AppColors.primary,
             unselectedLabelColor: AppColors.outline,
             tabs: [
-              Tab(text: 'Requests', icon: Icon(Icons.inbox_outlined, size: 20)),
-              Tab(text: 'Messages', icon: Icon(Icons.chat_bubble_outline, size: 20)),
+              Tab(text: 'Received'),
+              Tab(text: 'Sent'),
+              Tab(text: 'Messages'),
             ],
           ),
         ),
-                body: const TabBarView(
+        body: const TabBarView(
           children: [
             RequestsTab(),
+            SentRequestsTab(),
             Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,

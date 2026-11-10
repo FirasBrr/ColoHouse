@@ -48,9 +48,9 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
     setState(() => _sendingRequest = true);
     try {
       await ref.read(authRepoProvider).api.sendRequest(listing.id, msgController.text.trim());
+      ref.invalidate(listingDetailsProvider(listing.id)); // Refresh to show "PENDING"
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Request sent!')));
-        context.pop();
       }
     } on AuthException catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message), backgroundColor: AppColors.error));
@@ -101,12 +101,16 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (listing) {
-          String imageUrl = listing.photos.isNotEmpty
+          String coverUrl = listing.photos.isNotEmpty
               ? listing.photos.first.image
               : 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800';
-              
+
+          List<ListingPhoto> galleryPhotos = listing.photos.length > 1
+              ? listing.photos.sublist(1)
+              : [];
+
           bool isOwner = currentUser?.id == listing.ownerId;
-          bool canSendRequest = !isOwner && !listing.contactVisible;
+          bool canSendRequest = !isOwner && !listing.contactVisible && listing.myRequest == null;
 
           return Stack(
             children: [
@@ -138,7 +142,14 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                         ),
                     ],
                     flexibleSpace: FlexibleSpaceBar(
-                      background: Image.network(imageUrl, fit: BoxFit.cover),
+                      background: Image.network(
+                        coverUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: AppColors.surfaceLow,
+                          child: const Icon(Icons.home, size: 80, color: AppColors.outline),
+                        ),
+                      ),
                     ),
                   ),
                   SliverToBoxAdapter(
@@ -165,10 +176,40 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                             ],
                           ),
                           const Divider(height: 40),
+                          
                           const Text('About this place', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                           const SizedBox(height: 8),
                           Text(listing.description, style: const TextStyle(fontSize: 15, height: 1.5, color: AppColors.onSurfaceVariant)),
                           
+                          if (galleryPhotos.isNotEmpty) ...[
+                            const SizedBox(height: 24),
+                            const Text('Photo Gallery', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              height: 120,
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: galleryPhotos.length,
+                                separatorBuilder: (_, __) => const SizedBox(width: 12),
+                                itemBuilder: (context, index) {
+                                  return ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(
+                                      galleryPhotos[index].image,
+                                      width: 160,
+                                      height: 120,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Container(
+                                        width: 160, height: 120, color: AppColors.surfaceLow,
+                                        child: const Icon(Icons.broken_image, color: AppColors.outline),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+
                           if (listing.rules.isNotEmpty) ...[
                             const SizedBox(height: 24),
                             const Text('House Rules', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
@@ -250,6 +291,7 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                 ],
               ),
               
+              // BOTTOM BUTTONS
               if (canSendRequest)
                 Positioned(
                   bottom: 0, left: 0, right: 0,
@@ -262,6 +304,30 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                         icon: _sendingRequest ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Icon(Icons.send),
                         label: Text(_sendingRequest ? 'Sending...' : 'Send Request'),
                         style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                      ),
+                    ),
+                  ),
+                )
+              else if (!isOwner && listing.myRequest != null)
+                Positioned(
+                  bottom: 0, left: 0, right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(color: AppColors.surfaceLowest, boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -4))]),
+                    child: SafeArea(
+                      child: FilledButton.icon(
+                        onPressed: null, // Disabled
+                        icon: const Icon(Icons.check_circle_outline),
+                        label: Text(
+                          'Request ${listing.myRequest!.status.toUpperCase()}', 
+                          style: const TextStyle(fontWeight: FontWeight.bold)
+                        ),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size.fromHeight(52), 
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          disabledBackgroundColor: AppColors.surfaceLow,
+                          disabledForegroundColor: AppColors.primary,
+                        ),
                       ),
                     ),
                   ),

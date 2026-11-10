@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/errors/auth_exception.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -23,6 +24,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   int? _cityId;
   bool _saving = false;
+  bool _uploadingImage = false; // <-- Added for the avatar loader
   String? _error;
 
   @override
@@ -47,6 +49,40 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _institution.dispose();
     _occupation.dispose();
     super.dispose();
+  }
+
+  // --- IMAGE UPLOAD LOGIC ---
+  Future<void> _pickAndUploadImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    
+    if (picked == null) return;
+
+    setState(() => _uploadingImage = true);
+    try {
+      await ref.read(authRepoProvider).api.uploadProfilePicture(picked.path);
+      await ref.read(authProvider.notifier).refreshUser(); 
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile picture updated!')),
+        );
+      }
+    } on AuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _uploadingImage = false);
+    }
   }
 
   Future<void> _save() async {
@@ -103,21 +139,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: user.isVerified
-                          ? AppColors.secondaryContainer
-                              .withValues(alpha: 0.4)
+                          ? AppColors.secondaryContainer.withValues(alpha: 0.4)
                           : AppColors.tertiaryFixed.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
                       children: [
                         Icon(
-                          user.isVerified
-                              ? Icons.verified
-                              : Icons.info_outline,
+                          user.isVerified ? Icons.verified : Icons.info_outline,
                           size: 18,
-                          color: user.isVerified
-                              ? AppColors.primaryDark
-                              : AppColors.tertiary,
+                          color: user.isVerified ? AppColors.primaryDark : AppColors.tertiary,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -127,9 +158,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 : 'Fill in your profile completely. An admin will review and verify your account.',
                             style: TextStyle(
                               fontSize: 12,
-                              color: user.isVerified
-                                  ? AppColors.primaryDark
-                                  : AppColors.tertiary,
+                              color: user.isVerified ? AppColors.primaryDark : AppColors.tertiary,
                             ),
                           ),
                         ),
@@ -138,65 +167,62 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ),
                 const SizedBox(height: 20),
 
-                // --- Avatar placeholder ---
+                // --- Avatar Uploader (UPDATED) ---
                 Center(
                   child: Column(
                     children: [
-                      Stack(
-                        children: [
-                          Container(
-                            width: 96,
-                            height: 96,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.secondaryContainer
-                                  .withValues(alpha: 0.4),
-                              border: Border.all(
-                                color: AppColors.primary
-                                    .withValues(alpha: 0.25),
-                                width: 3,
-                              ),
-                            ),
-                            child: ClipOval(
-                              child: user?.profilePicture != null &&
-                                      user!.profilePicture!.isNotEmpty
-                                  ? Image.network(
-                                      user.profilePicture!,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) =>
-                                          const Icon(Icons.person,
-                                              size: 48,
-                                              color: AppColors.outline),
-                                    )
-                                  : const Icon(Icons.person,
-                                      size: 48, color: AppColors.outline),
-                            ),
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: Container(
-                              width: 32,
-                              height: 32,
+                      InkWell(
+                        onTap: _uploadingImage ? null : _pickAndUploadImage,
+                        borderRadius: BorderRadius.circular(48),
+                        child: Stack(
+                          children: [
+                            Container(
+                              width: 96,
+                              height: 96,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: AppColors.primary,
+                                color: AppColors.secondaryContainer.withValues(alpha: 0.4),
                                 border: Border.all(
-                                    color: AppColors.surface, width: 2),
+                                  color: AppColors.primary.withValues(alpha: 0.25),
+                                  width: 3,
+                                ),
                               ),
-                              child: const Icon(Icons.photo_camera,
-                                  size: 16, color: Colors.white),
+                              child: ClipOval(
+                                child: _uploadingImage
+                                    ? const Center(child: CircularProgressIndicator())
+                                    : user?.profilePicture != null && user!.profilePicture!.isNotEmpty
+                                        ? Image.network(
+                                            user.profilePicture!,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 48, color: AppColors.outline),
+                                          )
+                                        : const Icon(Icons.person, size: 48, color: AppColors.outline),
+                              ),
                             ),
-                          ),
-                        ],
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.primary,
+                                  border: Border.all(color: AppColors.surface, width: 2),
+                                ),
+                                child: const Icon(Icons.photo_camera, size: 16, color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'Picture upload coming soon',
+                        'Tap to change photo',
                         style: TextStyle(
-                          fontSize: 11,
-                          color: AppColors.outline,
-                          fontStyle: FontStyle.italic,
+                          fontSize: 12,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -213,13 +239,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.error_outline,
-                            color: AppColors.error, size: 20),
+                        const Icon(Icons.error_outline, color: AppColors.error, size: 20),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: Text(_error!,
-                              style: const TextStyle(
-                                  color: AppColors.error, fontSize: 13)),
+                          child: Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 13)),
                         ),
                       ],
                     ),
@@ -233,9 +256,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       child: AuthField(
                         controller: _firstName,
                         label: 'First name',
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'Required'
-                            : null,
+                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -243,9 +264,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       child: AuthField(
                         controller: _lastName,
                         label: 'Last name',
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'Required'
-                            : null,
+                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
                       ),
                     ),
                   ],
@@ -315,9 +334,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         (c) => DropdownMenuItem<int?>(
                           value: c.id,
                           child: Text(
-                            c.region.isEmpty
-                                ? c.name
-                                : '${c.name} — ${c.region}',
+                            c.region.isEmpty ? c.name : '${c.name} — ${c.region}',
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -334,8 +351,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       ? const SizedBox(
                           width: 22,
                           height: 22,
-                          child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2.5),
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
                         )
                       : const Text('Save changes'),
                 ),

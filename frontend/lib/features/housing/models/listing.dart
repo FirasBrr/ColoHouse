@@ -10,9 +10,21 @@ class ListingPhoto {
       );
 }
 
+class MyRequestStatus {
+  final int id;
+  final String status;
+
+  MyRequestStatus({required this.id, required this.status});
+
+  factory MyRequestStatus.fromJson(Map<String, dynamic> json) => MyRequestStatus(
+        id: json['id'] as int,
+        status: json['status'] as String,
+      );
+}
+
 class HousingListing {
   final int id;
-  final int ownerId; // ADDED
+  final int ownerId;
   final String title;
   final String description;
   final int rent;
@@ -30,11 +42,12 @@ class HousingListing {
   final double? distanceKm;
   final bool contactVisible;
   final String? ownerPhone;
-  final String rules; // ADDED
+  final String rules;
+  final MyRequestStatus? myRequest; // ADDED
 
   HousingListing({
     required this.id,
-    required this.ownerId, // ADDED
+    required this.ownerId,
     required this.title,
     required this.description,
     required this.rent,
@@ -52,13 +65,14 @@ class HousingListing {
     this.distanceKm,
     required this.contactVisible,
     this.ownerPhone,
-    required this.rules, // ADDED
+    required this.rules,
+    this.myRequest, // ADDED
   });
 
   factory HousingListing.fromJson(Map<String, dynamic> json) {
     return HousingListing(
       id: json['id'] as int,
-      ownerId: json['owner']?['id'] as int? ?? 0, // ADDED
+      ownerId: json['owner']?['id'] as int? ?? 0,
       title: json['title'] as String? ?? '',
       description: json['description'] as String? ?? '',
       rent: json['rent'] as int? ?? 0,
@@ -78,7 +92,10 @@ class HousingListing {
       distanceKm: (json['distance_km'] as num?)?.toDouble(),
       contactVisible: json['contact_visible'] as bool? ?? false,
       ownerPhone: json['owner_phone'] as String?,
-      rules: json['rules'] as String? ?? '', // ADDED
+      rules: json['rules'] as String? ?? '',
+      myRequest: json['my_request'] == null 
+          ? null 
+          : MyRequestStatus.fromJson(json['my_request'] as Map<String, dynamic>), // ADDED
     );
   }
 }

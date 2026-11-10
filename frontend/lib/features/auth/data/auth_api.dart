@@ -107,6 +107,20 @@ class AuthApi {
       throw AuthException(_errorMessage(e));
     }
   }
+    // Upload multiple photos for a listing
+  Future<void> uploadMultiplePhotos(int listingId, List<String> filePaths) async {
+    for (final path in filePaths) {
+      try {
+        final formData = FormData.fromMap({
+          'image': await MultipartFile.fromFile(path, filename: 'photo.jpg'),
+        });
+        await dio.post('/listings/$listingId/photos/', data: formData);
+      } on DioException catch (e) {
+        // If one fails, continue with the others, or throw
+        throw AuthException(_errorMessage(e));
+      }
+    }
+  }
   Future<void> updateListing(int id, Map<String, dynamic> changes) async {
     try {
       await dio.patch('/listings/$id/', data: changes);
@@ -146,7 +160,26 @@ class AuthApi {
       throw AuthException(_errorMessage(e));
     }
   }
+  // Fetch requests I have sent to others
+  Future<List<HousingRequest>> getSentRequests() async {
+    try {
+      final res = await dio.get('/requests/sent/');
+      return (res.data as List)
+          .map((e) => HousingRequest.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw AuthException(_errorMessage(e));
+    }
+  }
 
+  // Cancel a request I sent
+  Future<void> cancelRequest(int requestId) async {
+    try {
+      await dio.post('/requests/$requestId/cancel/');
+    } on DioException catch (e) {
+      throw AuthException(_errorMessage(e));
+    }
+  }
   // Accept a request
   Future<void> acceptRequest(int requestId) async {
     try {
@@ -199,6 +232,23 @@ class AuthApi {
   Future<void> deleteAccount() async {
     try {
       await dio.delete('/auth/me/');
+    } on DioException catch (e) {
+      throw AuthException(_errorMessage(e));
+    }
+  }
+  // Upload a profile picture
+  Future<void> uploadProfilePicture(String filePath) async {
+    try {
+      final formData = FormData.fromMap({
+        'profile_picture': await MultipartFile.fromFile(filePath, filename: 'avatar.jpg'),
+      });
+      
+      // Note: PATCH request with multipart data
+      await dio.patch(
+        '/auth/me/', 
+        data: formData,
+        options: Options(headers: {'Content-Type': 'multipart/form-data'}),
+      );
     } on DioException catch (e) {
       throw AuthException(_errorMessage(e));
     }

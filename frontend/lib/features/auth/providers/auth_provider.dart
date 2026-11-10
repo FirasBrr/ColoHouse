@@ -108,3 +108,7 @@ final myListingsProvider = FutureProvider.autoDispose<List<HousingListing>>((ref
 final receivedRequestsProvider = FutureProvider.autoDispose<List<HousingRequest>>((ref) async {
   return ref.read(authRepoProvider).api.getReceivedRequests();
 });
+
+final sentRequestsProvider = FutureProvider.autoDispose<List<HousingRequest>>((ref) async {
+  return ref.read(authRepoProvider).api.getSentRequests();
+});

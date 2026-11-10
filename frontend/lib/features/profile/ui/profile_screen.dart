@@ -21,6 +21,13 @@ class ProfileScreen extends ConsumerWidget {
         title: const Text('My Profile'),
         automaticallyImplyLeading: false,
         actions: [
+          // Edit Profile Button
+          IconButton(
+            tooltip: 'Edit Profile',
+            icon: const Icon(Icons.edit_outlined, color: AppColors.primary),
+            onPressed: () => context.push('/profile/edit'),
+          ),
+          // Log out Button
           IconButton(
             tooltip: 'Log out',
             icon: const Icon(Icons.logout_outlined, color: AppColors.primary),
@@ -51,22 +58,41 @@ class ProfileScreen extends ConsumerWidget {
                           height: 96,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: AppColors.secondaryContainer.withValues(alpha: 0.4),
-                            border: Border.all(color: AppColors.primary.withValues(alpha: 0.25), width: 3),
+                            color: AppColors.secondaryContainer
+                                .withValues(alpha: 0.4),
+                            border: Border.all(
+                              color: AppColors.primary
+                                  .withValues(alpha: 0.25),
+                              width: 3,
+                            ),
                           ),
                           child: ClipOval(
-                            child: user.profilePicture != null && user.profilePicture!.isNotEmpty
-                                ? Image.network(user.profilePicture!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _avatarFallback())
+                            child: user.profilePicture != null &&
+                                    user.profilePicture!.isNotEmpty
+                                ? Image.network(
+                                    user.profilePicture!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) =>
+                                        _avatarFallback(),
+                                  )
                                 : _avatarFallback(),
                           ),
                         ),
                         if (user.isVerified)
                           Positioned(
-                            bottom: 0, right: 0,
+                            bottom: 0,
+                            right: 0,
                             child: Container(
-                              width: 28, height: 28,
-                              decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.primary, border: Border.all(color: AppColors.surface, width: 2)),
-                              child: const Icon(Icons.check, size: 16, color: Colors.white),
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppColors.primary,
+                                border: Border.all(
+                                    color: AppColors.surface, width: 2),
+                              ),
+                              child: const Icon(Icons.check,
+                                  size: 16, color: Colors.white),
                             ),
                           ),
                       ],
@@ -74,14 +100,24 @@ class ProfileScreen extends ConsumerWidget {
                     const SizedBox(height: 12),
                     Text(
                       user.fullName.isEmpty ? 'Your name' : user.fullName,
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.onSurface),
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.onSurface,
+                      ),
                     ),
                     const SizedBox(height: 4),
-                    Text(user.email, style: const TextStyle(fontSize: 14, color: AppColors.outline)),
+                    Text(
+                      user.email,
+                      style: const TextStyle(
+                          fontSize: 14, color: AppColors.outline),
+                    ),
                     const SizedBox(height: 10),
                     user.isVerified
                         ? _VerifiedPill()
-                        : _UnverifiedPill(onTap: () => context.push('/profile/edit')),
+                        : _UnverifiedPill(
+                            onTap: () => context.push('/profile/edit'),
+                          ),
                   ],
                 ),
               ),
@@ -132,7 +168,17 @@ class ProfileScreen extends ConsumerWidget {
                               child: const Icon(Icons.home),
                             ),
                             title: Text(l.title),
-                            subtitle: Text(l.status.toUpperCase(), style: TextStyle(color: l.status == 'active' ? Colors.green : Colors.orange)),
+                            subtitle: Text(
+                              l.status.toUpperCase(), 
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: l.status == 'active' 
+                                    ? Colors.green 
+                                    : l.status == 'paused' 
+                                        ? Colors.orange 
+                                        : Colors.red, // Closed = Red
+                              ),
+                            ),
                             trailing: const Icon(Icons.chevron_right),
                             onTap: () => context.push('/listing/${l.id}'),
                           )),
