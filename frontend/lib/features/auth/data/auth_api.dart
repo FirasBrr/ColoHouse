@@ -1,9 +1,10 @@
 import 'package:dio/dio.dart';
-import 'package:image_picker/image_picker.dart'; 
 import '../../../core/errors/auth_exception.dart';
 import '../models/user.dart';
 import '../../profile/models/roommate_preferences.dart';
 import '../../housing/models/listing.dart';
+import '../../housing/models/housing_request.dart';
+
 class AuthApi {
   final Dio dio;
   AuthApi(this.dio);
@@ -129,6 +130,36 @@ class AuthApi {
       return (res.data as List)
           .map((e) => HousingListing.fromJson(e as Map<String, dynamic>))
           .toList();
+    } on DioException catch (e) {
+      throw AuthException(_errorMessage(e));
+    }
+  }
+
+    // Fetch requests sent to my listings
+  Future<List<HousingRequest>> getReceivedRequests() async {
+    try {
+      final res = await dio.get('/requests/received/');
+      return (res.data as List)
+          .map((e) => HousingRequest.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw AuthException(_errorMessage(e));
+    }
+  }
+
+  // Accept a request
+  Future<void> acceptRequest(int requestId) async {
+    try {
+      await dio.post('/requests/$requestId/accept/');
+    } on DioException catch (e) {
+      throw AuthException(_errorMessage(e));
+    }
+  }
+
+  // Decline a request
+  Future<void> declineRequest(int requestId) async {
+    try {
+      await dio.post('/requests/$requestId/decline/');
     } on DioException catch (e) {
       throw AuthException(_errorMessage(e));
     }

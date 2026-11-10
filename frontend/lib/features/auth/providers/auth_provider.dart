@@ -6,6 +6,7 @@ import '../data/auth_repository.dart';
 import '../models/user.dart';
 import '../../profile/models/roommate_preferences.dart';  
 import '../../housing/models/listing.dart';
+import '../../housing/models/housing_request.dart';
 
 // --- dependency injection ---
 final storageProvider = Provider<SecureStorage>((_) => SecureStorage());
@@ -102,4 +103,8 @@ final listingDetailsProvider = FutureProvider.autoDispose.family<HousingListing,
 
 final myListingsProvider = FutureProvider.autoDispose<List<HousingListing>>((ref) async {
   return ref.read(authRepoProvider).api.getMyListings();
+});
+
+final receivedRequestsProvider = FutureProvider.autoDispose<List<HousingRequest>>((ref) async {
+  return ref.read(authRepoProvider).api.getReceivedRequests();
 });

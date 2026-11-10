@@ -242,7 +242,7 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                               ),
                             ),
                           ],
-                          const SizedBox(height: 100), 
+                          const SizedBox(height: 200), 
                         ],
                       ),
                     ),

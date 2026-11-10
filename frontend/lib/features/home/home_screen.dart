@@ -92,7 +92,7 @@ class HomeScreen extends ConsumerWidget {
                     final displayListings = listings.take(5).toList();
                     
                     return SizedBox(
-                      height: 260, // Fixed height for horizontal list
+                      height: 280, // Fixed height for horizontal list
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         itemCount: displayListings.length,
