@@ -10,12 +10,10 @@ class QuickActionsRow extends StatelessWidget {
     return Row(
       children: [
         QuickAction(
-          icon: Icons.home_outlined,
-          label: 'Browse',
-          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Listings coming soon')),
+            icon: Icons.home_outlined,
+            label: 'Browse',
+            onTap: () => context.go('/search'), // Navigate to the search tab
           ),
-        ),
         const SizedBox(width: 10),
         QuickAction(
           icon: Icons.group_outlined,

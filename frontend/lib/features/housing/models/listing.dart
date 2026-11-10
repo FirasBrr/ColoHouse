@@ -12,6 +12,7 @@ class ListingPhoto {
 
 class HousingListing {
   final int id;
+  final int ownerId; // ADDED
   final String title;
   final String description;
   final int rent;
@@ -29,9 +30,11 @@ class HousingListing {
   final double? distanceKm;
   final bool contactVisible;
   final String? ownerPhone;
+  final String rules; // ADDED
 
   HousingListing({
     required this.id,
+    required this.ownerId, // ADDED
     required this.title,
     required this.description,
     required this.rent,
@@ -49,11 +52,13 @@ class HousingListing {
     this.distanceKm,
     required this.contactVisible,
     this.ownerPhone,
+    required this.rules, // ADDED
   });
 
   factory HousingListing.fromJson(Map<String, dynamic> json) {
     return HousingListing(
       id: json['id'] as int,
+      ownerId: json['owner']?['id'] as int? ?? 0, // ADDED
       title: json['title'] as String? ?? '',
       description: json['description'] as String? ?? '',
       rent: json['rent'] as int? ?? 0,
@@ -73,6 +78,7 @@ class HousingListing {
       distanceKm: (json['distance_km'] as num?)?.toDouble(),
       contactVisible: json['contact_visible'] as bool? ?? false,
       ownerPhone: json['owner_phone'] as String?,
+      rules: json['rules'] as String? ?? '', // ADDED
     );
   }
 }

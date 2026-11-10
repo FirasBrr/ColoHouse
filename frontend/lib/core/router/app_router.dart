@@ -15,6 +15,9 @@ import '../../features/profile/ui/edit_profile_screen.dart';
 import '../../features/profile/ui/preferences_screen.dart';
 import '../../features/profile/ui/settings_screen.dart';
 import '../widgets/main_scaffold.dart';
+import '../../features/housing/ui/listing_details_screen.dart';
+import '../../features/housing/ui/edit_listing_screen.dart';
+import '../../features/housing/models/listing.dart';
 
 class _AuthListenable extends ChangeNotifier {
   _AuthListenable(Ref ref) {
@@ -142,6 +145,21 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+
+     GoRoute(
+        path: '/listing/:id/edit',
+        builder: (context, state) {
+          final listing = state.extra as HousingListing;
+          return EditListingScreen(listing: listing);
+        },
+      ),
+      GoRoute(
+        path: '/listing/:id',
+        builder: (context, state) {
+          final id = int.parse(state.pathParameters['id']!);
+          return ListingDetailsScreen(listingId: id);
+        },
       ),
     ],
   );

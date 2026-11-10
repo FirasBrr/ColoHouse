@@ -1,15 +1,14 @@
 import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart'; 
 import '../../../core/errors/auth_exception.dart';
 import '../models/user.dart';
 import '../../profile/models/roommate_preferences.dart';
 import '../../housing/models/listing.dart';
-
 class AuthApi {
   final Dio dio;
   AuthApi(this.dio);
 
   // ---------------- AUTH ----------------
-
   Future<User> register({
     required String firstName,
     required String lastName,
@@ -48,6 +47,94 @@ class AuthApi {
     }
   }
 
+  // ---------------- LISTINGS ----------------
+  Future<int> createListing({
+    required String title,
+    required String description,
+    required int rent,
+    required int deposit,
+    required String roomType,
+    required int cityId,
+    required String address,
+    required double latitude,
+    required double longitude,
+    required String availableFrom,
+    String rules = '',
+  }) async {
+    try {
+      final res = await dio.post('/listings/', data: {
+        'title': title,
+        'description': description,
+        'rent': rent,
+        'deposit': deposit,
+        'room_type': roomType,
+        'city_id': cityId,
+        'address': address,
+        'latitude': latitude,
+        'longitude': longitude,
+        'available_from': availableFrom,
+        'rules': rules,
+        'status': 'active',
+      });
+      return res.data['id'] as int; 
+    } on DioException catch (e) {
+      throw AuthException(_errorMessage(e));
+    }
+  }
+
+  Future<List<HousingListing>> getListings({String? query}) async {
+    try {
+      final res = await dio.get('/listings/', queryParameters: {
+        if (query != null && query.isNotEmpty) 'q': query,
+      });
+      return (res.data as List)
+          .map((e) => HousingListing.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw AuthException(_errorMessage(e));
+    }
+  } 
+
+  // Photo upload (Android path based)
+  Future<void> uploadListingPhoto(int listingId, String filePath) async {
+    try {
+      final formData = FormData.fromMap({
+        'image': await MultipartFile.fromFile(filePath, filename: 'photo.jpg'),
+      });
+      await dio.post('/listings/$listingId/photos/', data: formData);
+    } on DioException catch (e) {
+      throw AuthException(_errorMessage(e));
+    }
+  }
+  Future<void> updateListing(int id, Map<String, dynamic> changes) async {
+    try {
+      await dio.patch('/listings/$id/', data: changes);
+    } on DioException catch (e) {
+      throw AuthException(_errorMessage(e));
+    }
+  }
+
+  // Delete a listing (using the 'closed' status)
+  Future<void> deleteListing(int id) async {
+    try {
+      // Backend doesn't allow DELETE, so we set status to 'closed'
+      await dio.patch('/listings/$id/', data: {'status': 'closed'});
+    } on DioException catch (e) {
+      throw AuthException(_errorMessage(e));
+    }
+  }
+  Future<List<HousingListing>> getMyListings() async {
+    try {
+      final res = await dio.get('/listings/mine/');
+      return (res.data as List)
+          .map((e) => HousingListing.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw AuthException(_errorMessage(e));
+    }
+  }
+
+  // ---------------- ME ----------------
   Future<User> me() async {
     try {
       final res = await dio.get('/auth/me/');
@@ -67,21 +154,8 @@ class AuthApi {
       throw AuthException(_errorMessage(e));
     }
   }
-//listing houses 
-Future<List<HousingListing>> getListings({String? query}) async {
-  try {
-    final res = await dio.get('/listings/', queryParameters: {
-      if (query != null && query.isNotEmpty) 'q': query,
-    });
-    return (res.data as List)
-        .map((e) => HousingListing.fromJson(e as Map<String, dynamic>))
-        .toList();
-  } on DioException catch (e) {
-    throw AuthException(_errorMessage(e));
-  }
-}
-  // ---------------- PROFILE ----------------
 
+  // ---------------- PROFILE ----------------
   Future<User> updateProfile(Map<String, dynamic> changes) async {
     try {
       final res = await dio.patch('/auth/me/', data: changes);
@@ -100,7 +174,6 @@ Future<List<HousingListing>> getListings({String? query}) async {
   }
 
   // ---------------- PREFERENCES ----------------
-
   Future<RoommatePreferences> getPreferences() async {
     try {
       final res = await dio.get('/auth/me/preferences/');
@@ -110,8 +183,7 @@ Future<List<HousingListing>> getListings({String? query}) async {
     }
   }
 
-  Future<RoommatePreferences> updatePreferences(
-      Map<String, dynamic> changes) async {
+  Future<RoommatePreferences> updatePreferences(Map<String, dynamic> changes) async {
     try {
       final res = await dio.patch('/auth/me/preferences/', data: changes);
       return RoommatePreferences.fromJson(res.data);
@@ -121,7 +193,6 @@ Future<List<HousingListing>> getListings({String? query}) async {
   }
 
   // ---------------- CITIES ----------------
-
   Future<List<City>> listCities() async {
     try {
       final res = await dio.get('/cities/');
@@ -134,7 +205,6 @@ Future<List<HousingListing>> getListings({String? query}) async {
   }
 
   // ---------------- ERRORS ----------------
-
   String _errorMessage(DioException e) {
     final status = e.response?.statusCode;
     final data = e.response?.data;
@@ -158,5 +228,25 @@ Future<List<HousingListing>> getListings({String? query}) async {
     }
 
     return 'Something went wrong. Try again.';
+  }
+  // Get a single listing by ID
+  Future<HousingListing> getListingDetails(int id) async {
+    try {
+      final res = await dio.get('/listings/$id/');
+      return HousingListing.fromJson(res.data);
+    } on DioException catch (e) {
+      throw AuthException(_errorMessage(e));
+    }
+  }
+
+  // Send a housing request
+  Future<void> sendRequest(int listingId, String message) async {
+    try {
+      await dio.post('/listings/$listingId/requests/', data: {
+        'message': message,
+      });
+    } on DioException catch (e) {
+      throw AuthException(_errorMessage(e));
+    }
   }
 }

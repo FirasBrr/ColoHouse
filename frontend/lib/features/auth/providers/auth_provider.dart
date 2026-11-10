@@ -95,3 +95,11 @@ final preferencesProvider = FutureProvider<RoommatePreferences>((ref) async {
 final listingsProvider = FutureProvider.autoDispose.family<List<HousingListing>, String>((ref, query) async {
   return ref.read(authRepoProvider).getListings(query: query);
 });
+
+final listingDetailsProvider = FutureProvider.autoDispose.family<HousingListing, int>((ref, id) async {
+  return ref.read(authRepoProvider).api.getListingDetails(id);
+});
+
+final myListingsProvider = FutureProvider.autoDispose<List<HousingListing>>((ref) async {
+  return ref.read(authRepoProvider).api.getMyListings();
+});

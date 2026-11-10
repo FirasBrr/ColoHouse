@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../auth/providers/auth_provider.dart';
+import '../housing/ui/widgets/listing_card.dart'; // Import the real card
 import 'widgets/home_app_bar.dart';
 import 'widgets/home_search_bar.dart';
 import 'widgets/placeholder_card.dart';
@@ -16,6 +17,9 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider).user;
+    
+    // Fetch the latest listings
+    final latestListingsAsync = ref.watch(listingsProvider(''));
 
     return SafeArea(
       bottom: false,
@@ -45,11 +49,11 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // Search bar (visual, non-functional for now)
+                // Search bar
                 const HomeSearchBar(),
                 const SizedBox(height: 16),
 
-                // Verification banner (only if not verified)
+                // Verification banner
                 if (user != null && !user.isVerified) ...[
                   VerificationBanner(
                     onTap: () => context.push('/profile/edit'),
@@ -61,19 +65,53 @@ class HomeScreen extends ConsumerWidget {
                 const QuickActionsRow(),
                 const SizedBox(height: 24),
 
-                // Recommended for you — placeholder
+                // Real Recommended Listings
                 SectionHeader(
-                  title: 'Recommended for you',
-                  onSeeAll: () => _showComingSoon(context, 'Listings'),
+                  title: 'Recent Listings',
+                  onSeeAll: () => context.go('/search'), // Go to Search tab
                 ),
                 const SizedBox(height: 12),
-                const PlaceholderCard(
-                  icon: Icons.home_work_outlined,
-                  title: 'Housing listings',
-                  subtitle:
-                      'Browse, filter, and save listings from other members. ',
-                  height: 180,
+                
+                latestListingsAsync.when(
+                  loading: () => const SizedBox(
+                    height: 220,
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (e, _) => Text('Error loading listings: $e'),
+                  data: (listings) {
+                    if (listings.isEmpty) {
+                      return const PlaceholderCard(
+                        icon: Icons.home_work_outlined,
+                        title: 'No listings yet',
+                        subtitle: 'Be the first to post a room!',
+                        height: 180,
+                      );
+                    }
+                    
+                    // Show only the first 5 listings on the home screen
+                    final displayListings = listings.take(5).toList();
+                    
+                    return SizedBox(
+                      height: 260, // Fixed height for horizontal list
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: displayListings.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 16),
+                        itemBuilder: (context, index) {
+                          final listing = displayListings[index];
+                          return SizedBox(
+                            width: 280, // Width of each card
+                            child: ListingCard(
+                              listing: listing,
+                              onTap: () => context.push('/listing/${listing.id}'),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
                 ),
+                
                 const SizedBox(height: 24),
 
                 // Potential roommates — placeholder
