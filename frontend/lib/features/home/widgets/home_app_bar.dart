@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Add this
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/theme_provider.dart'; // Add this
 
-class HomeAppBar extends StatelessWidget {
+class HomeAppBar extends ConsumerWidget { // Change to ConsumerWidget
   final dynamic user;
 
   const HomeAppBar({super.key, this.user});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) { // Add WidgetRef
+    final themeMode = ref.watch(themeProvider);
+    final isDark = themeMode == ThemeMode.dark;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
       decoration: BoxDecoration(
@@ -41,6 +46,20 @@ class HomeAppBar extends StatelessWidget {
             ),
           ),
           const Spacer(),
+          
+          // --- DARK MODE TOGGLE BUTTON ---
+          IconButton(
+            tooltip: isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+            icon: Icon(
+              isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+              color: AppColors.onSurfaceVariant,
+            ),
+            onPressed: () {
+              ref.read(themeProvider.notifier).toggleTheme();
+            },
+          ),
+          
+          // Notification Bell
           IconButton(
             icon: const Icon(Icons.notifications_outlined,
                 color: AppColors.onSurfaceVariant),

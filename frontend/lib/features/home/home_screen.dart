@@ -92,7 +92,7 @@ class HomeScreen extends ConsumerWidget {
                     final displayListings = listings.take(5).toList();
                     
                     return SizedBox(
-                      height: 280, // Fixed height for horizontal list
+                      height: 440, // Fixed height for horizontal list
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         itemCount: displayListings.length,
@@ -100,7 +100,7 @@ class HomeScreen extends ConsumerWidget {
                         itemBuilder: (context, index) {
                           final listing = displayListings[index];
                           return SizedBox(
-                            width: 280, // Width of each card
+                            width: 330, // Width of each card
                             child: ListingCard(
                               listing: listing,
                               onTap: () => context.push('/listing/${listing.id}'),
