@@ -7,12 +7,18 @@ import '../models/user.dart';
 import '../../profile/models/roommate_preferences.dart';  
 import '../../housing/models/listing.dart';
 import '../../housing/models/housing_request.dart';
+import '../../housing/models/listing_filters.dart';
 
 // --- dependency injection ---
 final storageProvider = Provider<SecureStorage>((_) => SecureStorage());
 
-final dioClientProvider = Provider<DioClient>((ref) {
-  return DioClient(ref.read(storageProvider));
+// Explicit type: the callback below makes the providers reference each other
+final Provider<DioClient> dioClientProvider = Provider<DioClient>((ref) {
+  return DioClient(
+    ref.read(storageProvider),
+    // Read lazily: authProvider itself depends on this provider
+    onSessionExpired: () => ref.read(authProvider.notifier).sessionExpired(),
+  );
 });
 
 final authApiProvider = Provider<AuthApi>((ref) {
@@ -72,6 +78,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     await repo.logout();
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
+
+  // The refresh token was rejected (tokens already cleared by the dio client)
+  void sessionExpired() {
+    if (!mounted) return;
+    state = const AuthState(status: AuthStatus.unauthenticated);
+  }
+
   Future<void> refreshUser() async {
   try {
     final user = await repo.api.me();
@@ -95,6 +108,13 @@ final preferencesProvider = FutureProvider<RoommatePreferences>((ref) async {
 
 final listingsProvider = FutureProvider.autoDispose.family<List<HousingListing>, String>((ref, query) async {
   return ref.read(authRepoProvider).getListings(query: query);
+});
+
+// Search tab (text + filters). Without filters it reuses listingsProvider, so the screens
+// that invalidate listingsProvider('') after posting/editing also refresh the search results.
+final searchListingsProvider = FutureProvider.autoDispose.family<List<HousingListing>, ListingFilters>((ref, filters) async {
+  if (!filters.hasFilters) return ref.watch(listingsProvider(filters.query.trim()).future);
+  return ref.read(authRepoProvider).getListings(filters: filters);
 });
 
 final listingDetailsProvider = FutureProvider.autoDispose.family<HousingListing, int>((ref, id) async {

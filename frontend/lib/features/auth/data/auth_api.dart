@@ -4,6 +4,7 @@ import '../models/user.dart';
 import '../../profile/models/roommate_preferences.dart';
 import '../../housing/models/listing.dart';
 import '../../housing/models/housing_request.dart';
+import '../../housing/models/listing_filters.dart';
 
 class AuthApi {
   final Dio dio;
@@ -83,10 +84,12 @@ class AuthApi {
     }
   }
 
-  Future<List<HousingListing>> getListings({String? query}) async {
+  // Search active listings. `filters` adds the Sprint 2 search filters (its q wins over `query`)
+  Future<List<HousingListing>> getListings({String? query, ListingFilters? filters}) async {
     try {
       final res = await dio.get('/listings/', queryParameters: {
         if (query != null && query.isNotEmpty) 'q': query,
+        ...?filters?.toQueryParameters(),
       });
       return (res.data as List)
           .map((e) => HousingListing.fromJson(e as Map<String, dynamic>))

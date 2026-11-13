@@ -52,6 +52,9 @@ class AppTheme {
         backgroundColor: AppColors.surfaceLowest,
         foregroundColor: AppColors.onSurface,
         elevation: 0.5,
+        // Stay white when content scrolls under (Material 3 tints it grey-green by default)
+        scrolledUnderElevation: 0.5,
+        surfaceTintColor: Colors.transparent,
         centerTitle: true,
       ),
     );

@@ -95,6 +95,8 @@ class HomeScreen extends ConsumerWidget {
                       height: 440, // Fixed height for horizontal list
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
+                        // Let cards scroll to the screen edges instead of being cut 20px early (shadows too)
+                        clipBehavior: Clip.none,
                         itemCount: displayListings.length,
                         separatorBuilder: (_, __) => const SizedBox(width: 16),
                         itemBuilder: (context, index) {

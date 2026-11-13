@@ -13,6 +13,8 @@ class ColohouseApp extends ConsumerWidget {
       title: 'Colohouse',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
+      // No Android 12+ stretch effect when a list is pulled past its end (it squashed the content)
+      scrollBehavior: const MaterialScrollBehavior().copyWith(overscroll: false),
       routerConfig: router,
     );
   }

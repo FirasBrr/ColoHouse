@@ -3,6 +3,7 @@ import 'auth_api.dart';
 import '../models/user.dart';
 import '../../profile/models/roommate_preferences.dart';
 import '../../housing/models/listing.dart';
+import '../../housing/models/listing_filters.dart';
 
 class AuthRepository {
   final AuthApi api;
@@ -76,6 +77,7 @@ Future<RoommatePreferences> updatePreferences(
     api.updatePreferences(changes);
 
 Future<List<City>> listCities() => api.listCities();
-Future<List<HousingListing>> getListings({String? query}) => api.getListings(query: query);
+Future<List<HousingListing>> getListings({String? query, ListingFilters? filters}) =>
+    api.getListings(query: query, filters: filters);
 
 }

@@ -49,10 +49,11 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
     setState(() => _sendingRequest = true);
     try {
       await ref.read(authRepoProvider).api.sendRequest(listing.id, msgController.text.trim());
-      ref.invalidate(listingDetailsProvider(listing.id)); 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Application sent successfully!')));
-      }
+      if (!mounted) return;
+      // Refetch so my_request becomes the new pending request
+      ref.invalidate(listingDetailsProvider(listing.id));
+      ref.invalidate(sentRequestsProvider);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Application sent successfully!')));
     } on AuthException catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message), backgroundColor: AppColors.error));
     } finally {
@@ -112,7 +113,16 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
               : [];
 
           bool isOwner = currentUser?.id == listing.ownerId;
-          bool canSendRequest = !isOwner && !listing.contactVisible && listing.myRequest == null;
+          // Only a pending or accepted request blocks a new one (backend rule)
+          final requestStatus = listing.myRequest?.status;
+          bool hasOpenRequest = requestStatus == 'pending' || requestStatus == 'accepted';
+          bool canSendRequest = !isOwner && !listing.contactVisible && !hasOpenRequest;
+          // Latest request was declined / cancelled: the student can apply again
+          String? previousRequestNote = canSendRequest && requestStatus != null
+              ? _previousRequestNote(requestStatus)
+              : null;
+          // The refetch after sending still shows the old my_request, keep the button busy
+          bool isSending = _sendingRequest || listingAsync.isLoading;
 
           return Stack(
             children: [
@@ -122,7 +132,11 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                   SliverAppBar(
                     expandedHeight: 320,
                     pinned: true,
-                    backgroundColor: Colors.transparent,
+                    // Clear over the photo, solid once collapsed so the content doesn't show through
+                    backgroundColor: WidgetStateColor.resolveWith(
+                      (states) => states.contains(WidgetState.scrolledUnder) ? AppColors.surface : Colors.transparent,
+                    ),
+                    surfaceTintColor: Colors.transparent,
                     elevation: 0,
                     leading: Padding(
                       padding: const EdgeInsets.all(8.0),
@@ -431,7 +445,7 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                                     children: [
                                       Row(
                                         children: [
-                                          Text('Hosted by ${listing.ownerName}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                                          Text('Host: ${listing.ownerName}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
                                           if (listing.isVerifiedOwner) ...[
                                             const SizedBox(width: 4),
                                             const Icon(Icons.verified, size: 14, color: AppColors.primary),
@@ -450,8 +464,9 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                               ],
                             ),
                           ),
-                          
-                          const SizedBox(height: 100),
+
+                          // Room for the sticky bottom bar (taller when it shows the note)
+                          SizedBox(height: previousRequestNote != null ? 150 : 100),
                         ],
                       ),
                     ),
@@ -469,37 +484,50 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                       color: AppColors.surfaceLowest.withValues(alpha: 0.95),
                       boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 20, offset: const Offset(0, -4))],
                     ),
+                    // Bottom inset only, the status bar inset made the bar ~50px too tall
                     child: SafeArea(
-                      child: Row(
+                      top: false,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
+                          if (previousRequestNote != null) ...[
+                            _buildPreviousRequestNote(requestStatus!, previousRequestNote),
+                            const SizedBox(height: 12),
+                          ],
+                          Row(
                             children: [
-                              RichText(
-                                text: TextSpan(
-                                  children: [
-                                    TextSpan(text: '${listing.rent} TND', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.primary)),
-                                    const TextSpan(text: ' / mo', style: TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant)),
-                                  ],
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  RichText(
+                                    text: TextSpan(
+                                      children: [
+                                        TextSpan(text: '${listing.rent} TND', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.primary)),
+                                        const TextSpan(text: ' / mo', style: TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant)),
+                                      ],
+                                    ),
+                                  ),
+                                  Text('Available ${listing.availableFrom}', style: const TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w600)),
+                                ],
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: FilledButton.icon(
+                                  onPressed: isSending ? null : () => _sendRequest(listing),
+                                  icon: isSending
+                                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                    : Icon(previousRequestNote != null ? Icons.refresh : Icons.send, size: 18),
+                                  label: Text(isSending
+                                    ? 'Sending...'
+                                    : previousRequestNote != null ? 'Apply Again' : 'Apply Now'),
+                                  style: FilledButton.styleFrom(
+                                    minimumSize: const Size.fromHeight(52),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(99)),
+                                  ),
                                 ),
                               ),
-                              Text('Available ${listing.availableFrom}', style: const TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w600)),
                             ],
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: FilledButton.icon(
-                              onPressed: _sendingRequest ? null : () => _sendRequest(listing),
-                              icon: _sendingRequest 
-                                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) 
-                                : const Icon(Icons.send, size: 18),
-                              label: Text(_sendingRequest ? 'Sending...' : 'Apply Now'),
-                              style: FilledButton.styleFrom(
-                                minimumSize: const Size.fromHeight(52), 
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(99)),
-                              ),
-                            ),
                           ),
                         ],
                       ),
@@ -513,6 +541,7 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(color: AppColors.surfaceLowest, boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -4))]),
                     child: SafeArea(
+                      top: false,
                       child: FilledButton.icon(
                         onPressed: null, 
                         icon: const Icon(Icons.check_circle_outline),
@@ -530,6 +559,37 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
             ],
           );
         },
+      ),
+    );
+  }
+
+  String _previousRequestNote(String status) {
+    switch (status) {
+      case 'declined':
+        return 'Your previous request was declined by the host.';
+      case 'cancelled':
+        return 'You cancelled your previous request.';
+      default:
+        return 'Your previous request was $status.';
+    }
+  }
+
+  Widget _buildPreviousRequestNote(String status, String note) {
+    final isDeclined = status == 'declined';
+    final color = isDeclined ? AppColors.error : AppColors.onSurfaceVariant;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDeclined ? AppColors.errorContainer : AppColors.surfaceLow,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(isDeclined ? Icons.cancel_outlined : Icons.info_outline, size: 16, color: color),
+          const SizedBox(width: 8),
+          Expanded(child: Text(note, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: color))),
+        ],
       ),
     );
   }
