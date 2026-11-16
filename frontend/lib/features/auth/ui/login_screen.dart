@@ -48,7 +48,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.colors.surface,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -59,28 +59,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Container(
                 width: 64,
                 height: 64,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.primary,
+                  color: context.colors.primary,
                 ),
                 child: const Icon(Icons.home_work_outlined,
                     color: Colors.white, size: 32),
               ),
               const SizedBox(height: 20),
-              const Text(
+              Text(
                 'Welcome back',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.onSurface,
+                  color: context.colors.onSurface,
                 ),
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'Log in to continue your housing search',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    fontSize: 14, color: AppColors.onSurfaceVariant),
+                    fontSize: 14, color: context.colors.onSurfaceVariant),
               ),
               const SizedBox(height: 12),
               // Trust pill
@@ -88,22 +88,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceLow,
+                  color: context.colors.surfaceLow,
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.verified_user_outlined,
-                        size: 14, color: AppColors.secondary),
-                    SizedBox(width: 6),
+                        size: 14, color: context.colors.secondary),
+                    const SizedBox(width: 6),
                     Text(
                       'TRUSTED HOUSING PLATFORM',
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 1,
-                        color: AppColors.secondary,
+                        color: context.colors.secondary,
                       ),
                     ),
                   ],
@@ -114,7 +114,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceLowest,
+                  color: context.colors.surfaceLowest,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
@@ -132,18 +132,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppColors.errorContainer,
+                            color: context.colors.errorContainer,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.error_outline,
-                                  color: AppColors.error, size: 20),
+                              Icon(Icons.error_outline,
+                                  color: context.colors.error, size: 20),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(_error!,
-                                    style: const TextStyle(
-                                        color: AppColors.error,
+                                    style: TextStyle(
+                                        color: context.colors.error,
                                         fontSize: 13)),
                               ),
                             ],
@@ -219,8 +219,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("Don't have an account?",
-                      style: TextStyle(color: AppColors.onSurfaceVariant)),
+                  Text("Don't have an account?",
+                      style: TextStyle(color: context.colors.onSurfaceVariant)),
                   TextButton(
                     onPressed:
                         _loading ? null : () => context.go('/register'),
@@ -234,19 +234,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceLow,
+                  color: context.colors.surfaceLow,
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.shield_outlined,
-                        size: 14, color: AppColors.secondary),
-                    SizedBox(width: 6),
+                        size: 14, color: context.colors.secondary),
+                    const SizedBox(width: 6),
                     Text(
                       'Your Privacy & Identity Protected',
                       style: TextStyle(
-                          fontSize: 11, color: AppColors.secondary),
+                          fontSize: 11, color: context.colors.secondary),
                     ),
                   ],
                 ),

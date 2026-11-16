@@ -14,26 +14,26 @@ class HomeSearchBar extends StatelessWidget {
         height: 52,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
-          color: AppColors.surfaceLowest,
+          color: context.colors.surfaceLowest,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: AppColors.outlineVariant.withValues(alpha: 0.5),
+            color: context.colors.outlineVariant.withValues(alpha: 0.5),
           ),
         ),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.search, color: AppColors.primary, size: 22),
-            SizedBox(width: 12),
+            Icon(Icons.search, color: context.colors.primary, size: 22),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 'Search housing, areas, or roommates…',
                 style: TextStyle(
                   fontSize: 13,
-                  color: AppColors.outline,
+                  color: context.colors.outline,
                 ),
               ),
             ),
-            Icon(Icons.tune, color: AppColors.primary, size: 20),
+            Icon(Icons.tune, color: context.colors.primary, size: 20),
           ],
         ),
       ),

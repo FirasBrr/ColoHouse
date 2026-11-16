@@ -11,10 +11,10 @@ class VerificationBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.tertiaryFixed.withValues(alpha: 0.4),
+        color: context.colors.tertiaryFixed.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.tertiaryFixed,
+          color: context.colors.tertiaryFixed,
         ),
       ),
       child: Row(
@@ -22,21 +22,21 @@ class VerificationBanner extends StatelessWidget {
           Container(
             width: 28,
             height: 28,
-            decoration: const BoxDecoration(
-              color: AppColors.tertiaryFixed,
+            decoration: BoxDecoration(
+              color: context.colors.tertiaryFixed,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.info_outline,
-                size: 17, color: AppColors.tertiary),
+            child: Icon(Icons.info_outline,
+                size: 17, color: context.colors.tertiary),
           ),
           const SizedBox(width: 10),
-          const Expanded(
+          Expanded(
             child: Text(
               'Complete your profile to get verified and unlock all features.',
               style: TextStyle(
                 fontSize: 12,
                 height: 1.3,
-                color: AppColors.onSurface,
+                color: context.colors.onSurface,
                 fontWeight: FontWeight.w500,
               ),
             ),

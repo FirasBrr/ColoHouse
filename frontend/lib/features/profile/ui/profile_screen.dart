@@ -16,7 +16,7 @@ class ProfileScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.colors.surface,
       appBar: AppBar(
         title: const Text('My Profile'),
         automaticallyImplyLeading: false,
@@ -24,13 +24,13 @@ class ProfileScreen extends ConsumerWidget {
           // Edit Profile Button
           IconButton(
             tooltip: 'Edit Profile',
-            icon: const Icon(Icons.edit_outlined, color: AppColors.primary),
+            icon: Icon(Icons.edit_outlined, color: context.colors.primary),
             onPressed: () => context.push('/profile/edit'),
           ),
           // Log out Button
           IconButton(
             tooltip: 'Log out',
-            icon: const Icon(Icons.logout_outlined, color: AppColors.primary),
+            icon: Icon(Icons.logout_outlined, color: context.colors.primary),
             onPressed: () => ref.read(authProvider.notifier).logout(),
           ),
         ],
@@ -38,7 +38,7 @@ class ProfileScreen extends ConsumerWidget {
       body: SafeArea(
         top: false,
         child: RefreshIndicator(
-          color: AppColors.primary,
+          color: context.colors.primary,
           onRefresh: () async {
             await ref.read(authProvider.notifier).refreshUser();
             ref.invalidate(myListingsProvider);
@@ -58,10 +58,10 @@ class ProfileScreen extends ConsumerWidget {
                           height: 96,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: AppColors.secondaryContainer
+                            color: context.colors.secondaryContainer
                                 .withValues(alpha: 0.4),
                             border: Border.all(
-                              color: AppColors.primary
+                              color: context.colors.primary
                                   .withValues(alpha: 0.25),
                               width: 3,
                             ),
@@ -73,9 +73,9 @@ class ProfileScreen extends ConsumerWidget {
                                     user.profilePicture!,
                                     fit: BoxFit.cover,
                                     errorBuilder: (_, __, ___) =>
-                                        _avatarFallback(),
+                                        _avatarFallback(context),
                                   )
-                                : _avatarFallback(),
+                                : _avatarFallback(context),
                           ),
                         ),
                         if (user.isVerified)
@@ -87,9 +87,9 @@ class ProfileScreen extends ConsumerWidget {
                               height: 28,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: AppColors.primary,
+                                color: context.colors.primary,
                                 border: Border.all(
-                                    color: AppColors.surface, width: 2),
+                                    color: context.colors.surface, width: 2),
                               ),
                               child: const Icon(Icons.check,
                                   size: 16, color: Colors.white),
@@ -100,17 +100,17 @@ class ProfileScreen extends ConsumerWidget {
                     const SizedBox(height: 12),
                     Text(
                       user.fullName.isEmpty ? 'Your name' : user.fullName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.onSurface,
+                        color: context.colors.onSurface,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       user.email,
-                      style: const TextStyle(
-                          fontSize: 14, color: AppColors.outline),
+                      style: TextStyle(
+                          fontSize: 14, color: context.colors.outline),
                     ),
                     const SizedBox(height: 10),
                     user.isVerified
@@ -164,7 +164,7 @@ class ProfileScreen extends ConsumerWidget {
                             contentPadding: EdgeInsets.zero,
                             leading: Container(
                               width: 50, height: 50,
-                              decoration: BoxDecoration(color: AppColors.surfaceLow, borderRadius: BorderRadius.circular(8)),
+                              decoration: BoxDecoration(color: context.colors.surfaceLow, borderRadius: BorderRadius.circular(8)),
                               child: const Icon(Icons.home),
                             ),
                             title: Text(l.title),
@@ -213,15 +213,15 @@ class ProfileScreen extends ConsumerWidget {
                   icon: const Icon(Icons.logout_outlined, size: 18),
                   label: const Text('Log out'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    side: const BorderSide(color: AppColors.primary, width: 2),
+                    foregroundColor: context.colors.primary,
+                    side: BorderSide(color: context.colors.primary, width: 2),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
               ),
               const SizedBox(height: 12),
-              const Center(
-                child: Text('Colohouse — Find Your Home', style: TextStyle(fontSize: 11, color: AppColors.outline)),
+              Center(
+                child: Text('Colohouse — Find Your Home', style: TextStyle(fontSize: 11, color: context.colors.outline)),
               ),
             ],
           ),
@@ -230,8 +230,8 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _avatarFallback() {
-    return const Center(child: Icon(Icons.person, size: 48, color: AppColors.outline));
+  Widget _avatarFallback(BuildContext context) {
+    return Center(child: Icon(Icons.person, size: 48, color: context.colors.outline));
   }
 }
 
@@ -241,13 +241,13 @@ class _VerifiedPill extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-      decoration: BoxDecoration(color: AppColors.secondaryContainer.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(999)),
-      child: const Row(
+      decoration: BoxDecoration(color: context.colors.secondaryContainer.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(999)),
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.verified, size: 14, color: AppColors.primaryDark),
-          SizedBox(width: 6),
-          Text('Verified Account', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primaryDark)),
+          Icon(Icons.verified, size: 14, color: context.colors.primaryDark),
+          const SizedBox(width: 6),
+          Text('Verified Account', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: context.colors.primaryDark)),
         ],
       ),
     );
@@ -265,15 +265,15 @@ class _UnverifiedPill extends StatelessWidget {
       borderRadius: BorderRadius.circular(999),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-        decoration: BoxDecoration(color: AppColors.tertiaryFixed.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(999)),
-        child: const Row(
+        decoration: BoxDecoration(color: context.colors.tertiaryFixed.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(999)),
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.info_outline, size: 14, color: AppColors.tertiary),
-            SizedBox(width: 6),
-            Text('Not verified — complete your profile', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.tertiary)),
-            SizedBox(width: 4),
-            Icon(Icons.chevron_right, size: 14, color: AppColors.tertiary),
+            Icon(Icons.info_outline, size: 14, color: context.colors.tertiary),
+            const SizedBox(width: 6),
+            Text('Not verified — complete your profile', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: context.colors.tertiary)),
+            const SizedBox(width: 4),
+            Icon(Icons.chevron_right, size: 14, color: context.colors.tertiary),
           ],
         ),
       ),
@@ -294,7 +294,7 @@ class _SectionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLowest,
+        color: context.colors.surfaceLowest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
       ),
@@ -303,9 +303,9 @@ class _SectionCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, size: 18, color: AppColors.primary),
+              Icon(icon, size: 18, color: context.colors.primary),
               const SizedBox(width: 8),
-              Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primary)),
+              Text(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.primary)),
             ],
           ),
           const SizedBox(height: 12),
@@ -331,14 +331,14 @@ class _InfoRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 120, child: Text(label, style: const TextStyle(fontSize: 13, color: AppColors.onSurfaceVariant))),
+          SizedBox(width: 120, child: Text(label, style: TextStyle(fontSize: 13, color: context.colors.onSurfaceVariant))),
           Expanded(
             child: Text(
               display,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: isEmpty ? FontWeight.w400 : FontWeight.w500,
-                color: isEmpty ? AppColors.outline : AppColors.onSurface,
+                color: isEmpty ? context.colors.outline : context.colors.onSurface,
                 fontStyle: isEmpty ? FontStyle.italic : FontStyle.normal,
               ),
             ),
@@ -360,7 +360,7 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surfaceLowest,
+      color: context.colors.surfaceLowest,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,
@@ -371,12 +371,12 @@ class _ActionButton extends StatelessWidget {
             children: [
               Container(
                 width: 36, height: 36,
-                decoration: BoxDecoration(color: AppColors.surfaceLow, borderRadius: BorderRadius.circular(10)),
-                child: Icon(icon, size: 20, color: AppColors.primary),
+                decoration: BoxDecoration(color: context.colors.surfaceLow, borderRadius: BorderRadius.circular(10)),
+                child: Icon(icon, size: 20, color: context.colors.primary),
               ),
               const SizedBox(width: 12),
-              Expanded(child: Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.onSurface))),
-              const Icon(Icons.chevron_right, color: AppColors.outline),
+              Expanded(child: Text(label, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.colors.onSurface))),
+              Icon(Icons.chevron_right, color: context.colors.outline),
             ],
           ),
         ),

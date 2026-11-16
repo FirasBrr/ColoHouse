@@ -60,7 +60,7 @@ class QuickAction extends StatelessWidget {
         child: Container(
           height: 78,
           decoration: BoxDecoration(
-            color: AppColors.surfaceLow,
+            color: context.colors.surfaceLow,
             borderRadius: BorderRadius.circular(14),
           ),
           child: Column(
@@ -70,18 +70,18 @@ class QuickAction extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.75),
+                  color: context.colors.surfaceLowest.withValues(alpha: 0.75),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 18, color: AppColors.primary),
+                child: Icon(icon, size: 18, color: context.colors.primary),
               ),
               const SizedBox(height: 6),
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.onSurface,
+                  color: context.colors.onSurface,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 1,

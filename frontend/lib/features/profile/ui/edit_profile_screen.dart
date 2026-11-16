@@ -71,13 +71,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     } on AuthException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
+          SnackBar(content: Text(e.message), backgroundColor: context.colors.error),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text('Error: $e'), backgroundColor: context.colors.error),
         );
       }
     } finally {
@@ -123,7 +123,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final user = ref.watch(authProvider).user;
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.colors.surface,
       appBar: AppBar(title: const Text('Edit Profile')),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -139,8 +139,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: user.isVerified
-                          ? AppColors.secondaryContainer.withValues(alpha: 0.4)
-                          : AppColors.tertiaryFixed.withValues(alpha: 0.4),
+                          ? context.colors.secondaryContainer.withValues(alpha: 0.4)
+                          : context.colors.tertiaryFixed.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
@@ -148,7 +148,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         Icon(
                           user.isVerified ? Icons.verified : Icons.info_outline,
                           size: 18,
-                          color: user.isVerified ? AppColors.primaryDark : AppColors.tertiary,
+                          color: user.isVerified ? context.colors.primaryDark : context.colors.tertiary,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -158,7 +158,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 : 'Fill in your profile completely. An admin will review and verify your account.',
                             style: TextStyle(
                               fontSize: 12,
-                              color: user.isVerified ? AppColors.primaryDark : AppColors.tertiary,
+                              color: user.isVerified ? context.colors.primaryDark : context.colors.tertiary,
                             ),
                           ),
                         ),
@@ -181,9 +181,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               height: 96,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: AppColors.secondaryContainer.withValues(alpha: 0.4),
+                                color: context.colors.secondaryContainer.withValues(alpha: 0.4),
                                 border: Border.all(
-                                  color: AppColors.primary.withValues(alpha: 0.25),
+                                  color: context.colors.primary.withValues(alpha: 0.25),
                                   width: 3,
                                 ),
                               ),
@@ -194,9 +194,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                         ? Image.network(
                                             user.profilePicture!,
                                             fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 48, color: AppColors.outline),
+                                            errorBuilder: (_, __, ___) => Icon(Icons.person, size: 48, color: context.colors.outline),
                                           )
-                                        : const Icon(Icons.person, size: 48, color: AppColors.outline),
+                                        : Icon(Icons.person, size: 48, color: context.colors.outline),
                               ),
                             ),
                             Positioned(
@@ -207,8 +207,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 height: 32,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: AppColors.primary,
-                                  border: Border.all(color: AppColors.surface, width: 2),
+                                  color: context.colors.primary,
+                                  border: Border.all(color: context.colors.surface, width: 2),
                                 ),
                                 child: const Icon(Icons.photo_camera, size: 16, color: Colors.white),
                               ),
@@ -217,11 +217,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'Tap to change photo',
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.primary,
+                          color: context.colors.primary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -234,15 +234,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.errorContainer,
+                      color: context.colors.errorContainer,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.error_outline, color: AppColors.error, size: 20),
+                        Icon(Icons.error_outline, color: context.colors.error, size: 20),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 13)),
+                          child: Text(_error!, style: TextStyle(color: context.colors.error, fontSize: 13)),
                         ),
                       ],
                     ),
@@ -316,7 +316,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ),
                   error: (e, _) => Text(
                     'Failed to load cities: $e',
-                    style: const TextStyle(color: AppColors.error),
+                    style: TextStyle(color: context.colors.error),
                   ),
                   data: (cities) => DropdownButtonFormField<int?>(
                     initialValue: _cityId,

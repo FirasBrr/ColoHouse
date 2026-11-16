@@ -72,7 +72,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final strength = _strength(_password.text);
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.colors.surface,
       appBar: AppBar(
         title: const Text('Create account',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
@@ -90,21 +90,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: AppColors.secondaryContainer,
+                    color: context.colors.secondaryContainer,
                     borderRadius: BorderRadius.circular(999),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.home_work_outlined,
-                          size: 13, color: AppColors.primaryDark),
-                      SizedBox(width: 6),
+                          size: 13, color: context.colors.primaryDark),
+                      const SizedBox(width: 6),
                       Text('SHARED LIVING, SIMPLIFIED',
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
                             letterSpacing: 0.5,
-                            color: AppColors.primaryDark,
+                            color: context.colors.primaryDark,
                           )),
                     ],
                   ),
@@ -114,20 +114,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     style: TextStyle(
                         fontSize: 26, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 4),
-                const Text('Find housing and roommates that fit you',
+                Text('Find housing and roommates that fit you',
                     style:
-                        TextStyle(color: AppColors.onSurfaceVariant)),
+                        TextStyle(color: context.colors.onSurfaceVariant)),
                 const SizedBox(height: 20),
 
                 if (_error != null) ...[
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.errorContainer,
+                      color: context.colors.errorContainer,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(_error!,
-                        style: const TextStyle(color: AppColors.error)),
+                        style: TextStyle(color: context.colors.error)),
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -211,8 +211,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                       ? Colors.red
                                       : strength == 2
                                           ? Colors.orange
-                                          : AppColors.primary)
-                                  : AppColors.surfaceLow,
+                                          : context.colors.primary)
+                                  : context.colors.surfaceLow,
                               borderRadius:
                                   BorderRadius.circular(999),
                             ),
@@ -239,27 +239,27 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceLow,
+                    color: context.colors.surfaceLow,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.key_outlined, color: AppColors.primary),
-                      SizedBox(width: 12),
+                      Icon(Icons.key_outlined, color: context.colors.primary),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Instant Access & Roommate Matching',
+                            const Text('Instant Access & Roommate Matching',
                                 style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     fontSize: 13)),
-                            SizedBox(height: 2),
+                            const SizedBox(height: 2),
                             Text(
                               'Get matched with compatible roommates and unlock housing listings in minutes.',
                               style: TextStyle(
                                   fontSize: 11,
-                                  color: AppColors.onSurfaceVariant),
+                                  color: context.colors.onSurfaceVariant),
                             ),
                           ],
                         ),
@@ -292,9 +292,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('Already have an account?',
+                    Text('Already have an account?',
                         style: TextStyle(
-                            color: AppColors.onSurfaceVariant)),
+                            color: context.colors.onSurfaceVariant)),
                     TextButton(
                       onPressed: _loading
                           ? null
@@ -307,10 +307,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
 
                 const SizedBox(height: 12),
-                const Text(
+                Text(
                   'By registering, you agree to Colohouse Terms of Service and Community Guidelines.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 11, color: AppColors.outline),
+                  style: TextStyle(fontSize: 11, color: context.colors.outline),
                 ),
               ],
             ),

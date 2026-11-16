@@ -126,7 +126,7 @@ class _PostTabState extends ConsumerState<PostTab> {
     final citiesAsync = ref.watch(cityListProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.colors.surface,
       appBar: AppBar(
         title: const Text('Post a Listing'),
         centerTitle: true,
@@ -142,8 +142,8 @@ class _PostTabState extends ConsumerState<PostTab> {
                 if (_error != null) ...[
                   Container(
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: AppColors.errorContainer, borderRadius: BorderRadius.circular(10)),
-                    child: Text(_error!, style: const TextStyle(color: AppColors.error)),
+                    decoration: BoxDecoration(color: context.colors.errorContainer, borderRadius: BorderRadius.circular(10)),
+                    child: Text(_error!, style: TextStyle(color: context.colors.error)),
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -151,7 +151,7 @@ class _PostTabState extends ConsumerState<PostTab> {
                 // ===== PHOTOS SECTION =====
                 const Text('Photos', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 4),
-                const Text('First photo will be the cover', style: TextStyle(fontSize: 12, color: AppColors.outline)),
+                Text('First photo will be the cover', style: TextStyle(fontSize: 12, color: context.colors.outline)),
                 const SizedBox(height: 12),
                 
                 // CENTERED PHOTO PICKER
@@ -181,7 +181,7 @@ class _PostTabState extends ConsumerState<PostTab> {
                                     bottom: 4, left: 4,
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(8)),
+                                      decoration: BoxDecoration(color: context.colors.primary, borderRadius: BorderRadius.circular(8)),
                                       child: const Text('Cover', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                                     ),
                                   ),
@@ -209,16 +209,16 @@ class _PostTabState extends ConsumerState<PostTab> {
                             child: Container(
                               width: 110, height: 110,
                               decoration: BoxDecoration(
-                                color: AppColors.surfaceLow,
+                                color: context.colors.surfaceLow,
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: AppColors.outlineVariant, style: BorderStyle.solid),
+                                border: Border.all(color: context.colors.outlineVariant, style: BorderStyle.solid),
                               ),
-                              child: const Column(
+                              child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.add_a_photo_outlined, color: AppColors.primary, size: 28),
-                                  SizedBox(height: 8),
-                                  Text('Add Photo', style: TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
+                                  Icon(Icons.add_a_photo_outlined, color: context.colors.primary, size: 28),
+                                  const SizedBox(height: 8),
+                                  Text('Add Photo', style: TextStyle(fontSize: 12, color: context.colors.primary, fontWeight: FontWeight.w600)),
                                 ],
                               ),
                             ),
@@ -294,7 +294,7 @@ class _PostTabState extends ConsumerState<PostTab> {
                     const SizedBox(height: 8),
                     Container(
                       height: 200,
-                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.outlineVariant)),
+                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: context.colors.outlineVariant)),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: FlutterMap(
@@ -359,7 +359,7 @@ class _SectionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLowest,
+        color: context.colors.surfaceLowest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -374,7 +374,7 @@ class _SectionCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.primary)),
+              Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: context.colors.primary)),
             ],
           ),
           const SizedBox(height: 16),

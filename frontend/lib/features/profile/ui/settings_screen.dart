@@ -53,7 +53,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           FilledButton(
             style:
-                FilledButton.styleFrom(backgroundColor: AppColors.error),
+                FilledButton.styleFrom(backgroundColor: ctx.colors.error),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Delete'),
           ),
@@ -80,22 +80,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.colors.surface,
       appBar: AppBar(title: const Text('Settings')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
           children: [
             // ===== Notifications =====
-            const _SectionHeader(
+            _SectionHeader(
               icon: Icons.notifications_active_outlined,
               label: 'Notifications',
-              color: AppColors.primary,
+              color: context.colors.primary,
             ),
             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
-                color: AppColors.surfaceLowest,
+                color: context.colors.surfaceLowest,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -147,7 +147,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppColors.surfaceLow,
+                color: context.colors.surfaceLow,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -155,28 +155,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Container(
                     width: 32,
                     height: 32,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.secondaryContainer,
+                      color: context.colors.secondaryContainer,
                     ),
-                    child: const Icon(Icons.verified_user,
-                        size: 18, color: AppColors.primaryDark),
+                    child: Icon(Icons.verified_user,
+                        size: 18, color: context.colors.primaryDark),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Privacy First',
+                        const Text('Privacy First',
                             style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600)),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
                           'Your contact details stay private until you accept a connection.',
                           style: TextStyle(
                               fontSize: 12,
-                              color: AppColors.onSurfaceVariant),
+                              color: context.colors.onSurfaceVariant),
                         ),
                       ],
                     ),
@@ -187,16 +187,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const SizedBox(height: 28),
 
             // ===== Danger zone =====
-            const _SectionHeader(
+            _SectionHeader(
               icon: Icons.warning_amber_outlined,
               label: 'Danger Zone',
-              color: AppColors.error,
+              color: context.colors.error,
             ),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.surfaceLowest,
+                color: context.colors.surfaceLowest,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -206,10 +206,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       style: TextStyle(
                           fontSize: 14, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'Removing your account will erase all your data. This action is permanent.',
                     style: TextStyle(
-                        fontSize: 12, color: AppColors.onSurfaceVariant),
+                        fontSize: 12, color: context.colors.onSurfaceVariant),
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
@@ -218,19 +218,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     child: OutlinedButton.icon(
                       onPressed: _deleting ? null : _deleteAccount,
                       icon: _deleting
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 18,
                               height: 18,
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: AppColors.error),
+                                  strokeWidth: 2, color: context.colors.error),
                             )
                           : const Icon(Icons.delete_outline, size: 20),
                       label: Text(_deleting
                           ? 'Deleting…'
                           : 'Delete my account'),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.error,
-                        side: const BorderSide(color: AppColors.error),
+                        foregroundColor: context.colors.error,
+                        side: BorderSide(color: context.colors.error),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
                       ),
@@ -242,21 +242,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const SizedBox(height: 32),
 
             // ===== Footer =====
-            const Center(
+            Center(
               child: Column(
                 children: [
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.apartment,
-                          size: 16, color: AppColors.outline),
-                      SizedBox(width: 6),
+                          size: 16, color: context.colors.outline),
+                      const SizedBox(width: 6),
                       Text('Colohouse',
                           style: TextStyle(
-                              fontSize: 12, color: AppColors.outline)),
+                              fontSize: 12, color: context.colors.outline)),
                     ],
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   
                 ],
               ),

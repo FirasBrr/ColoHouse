@@ -26,7 +26,7 @@ class _ListingCardState extends State<ListingCard> {
       onTap: widget.onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surfaceLowest,
+          color: context.colors.surfaceLowest,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -51,8 +51,8 @@ class _ListingCardState extends State<ListingCard> {
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(
                       height: 200,
-                      color: AppColors.surfaceLow,
-                      child: const Icon(Icons.home, size: 40, color: AppColors.outline),
+                      color: context.colors.surfaceLow,
+                      child: Icon(Icons.home, size: 40, color: context.colors.outline),
                     ),
                   ),
                 ),
@@ -63,16 +63,16 @@ class _ListingCardState extends State<ListingCard> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: context.colors.surfaceLowest.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(99),
                       boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4)],
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.auto_awesome, size: 14, color: AppColors.primary),
-                        SizedBox(width: 4),
-                        Text('95% Match', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                        Icon(Icons.auto_awesome, size: 14, color: context.colors.primary),
+                        const SizedBox(width: 4),
+                        Text('95% Match', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: context.colors.primary)),
                       ],
                     ),
                   ),
@@ -86,13 +86,13 @@ class _ListingCardState extends State<ListingCard> {
                     child: Container(
                       width: 36, height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.9),
+                        color: context.colors.surfaceLowest.withValues(alpha: 0.9),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         _isFavorite ? Icons.favorite : Icons.favorite_border,
                         size: 18,
-                        color: _isFavorite ? Colors.red : AppColors.onSurfaceVariant,
+                        color: _isFavorite ? Colors.red : context.colors.onSurfaceVariant,
                       ),
                     ),
                   ),
@@ -126,29 +126,29 @@ class _ListingCardState extends State<ListingCard> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceLow,
+                      color: context.colors.surfaceLow,
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Text('Verified Host', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                    child: Text('Verified Host', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: context.colors.primary)),
                   ),
                   const SizedBox(height: 8),
                   
                   // Title & Location
                   Text(
                     listing.title,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.onSurface),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: context.colors.onSurface),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.location_on_outlined, size: 14, color: AppColors.outline),
+                      Icon(Icons.location_on_outlined, size: 14, color: context.colors.outline),
                       const SizedBox(width: 4),
                       Expanded( 
                         child: Text(
                           listing.cityName, 
-                          style: const TextStyle(fontSize: 13, color: AppColors.outline),
+                          style: TextStyle(fontSize: 13, color: context.colors.outline),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -179,18 +179,18 @@ class _ListingCardState extends State<ListingCard> {
                           RichText(
                             text: TextSpan(
                               children: [
-                                TextSpan(text: '${listing.rent} TND', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.primary)),
-                                const TextSpan(text: ' / month', style: TextStyle(fontSize: 13, color: AppColors.outline)),
+                                TextSpan(text: '${listing.rent} TND', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: context.colors.primary)),
+                                TextSpan(text: ' / month', style: TextStyle(fontSize: 13, color: context.colors.outline)),
                               ],
                             ),
                           ),
-                          const Text('All utilities included', style: TextStyle(fontSize: 12, color: AppColors.secondary)),
+                          Text('All utilities included', style: TextStyle(fontSize: 12, color: context.colors.secondary)),
                         ],
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                         decoration: BoxDecoration(
-                          color: AppColors.primary,
+                          color: context.colors.primary,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Row(
@@ -223,15 +223,15 @@ class _SpecBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLow,
+        color: context.colors.surfaceLow,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: AppColors.onSurfaceVariant),
+          Icon(icon, size: 14, color: context.colors.onSurfaceVariant),
           const SizedBox(width: 6),
-          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.onSurfaceVariant)),
+          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.colors.onSurfaceVariant)),
         ],
       ),
     );

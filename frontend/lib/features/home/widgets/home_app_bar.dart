@@ -16,10 +16,10 @@ class HomeAppBar extends ConsumerWidget { // Change to ConsumerWidget
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLowest,
+        color: context.colors.surfaceLowest,
         border: Border(
           bottom: BorderSide(
-            color: AppColors.outlineVariant.withValues(alpha: 0.4),
+            color: context.colors.outlineVariant.withValues(alpha: 0.4),
             width: 1,
           ),
         ),
@@ -29,19 +29,19 @@ class HomeAppBar extends ConsumerWidget { // Change to ConsumerWidget
           Container(
             width: 36,
             height: 36,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.primary,
+              color: context.colors.primary,
             ),
             child: const Icon(Icons.home, color: Colors.white, size: 20),
           ),
           const SizedBox(width: 10),
-          const Text(
+          Text(
             'Colohouse',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: AppColors.primary,
+              color: context.colors.primary,
               letterSpacing: -0.3,
             ),
           ),
@@ -52,17 +52,17 @@ class HomeAppBar extends ConsumerWidget { // Change to ConsumerWidget
             tooltip: isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
             icon: Icon(
               isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
-              color: AppColors.onSurfaceVariant,
+              color: context.colors.onSurfaceVariant,
             ),
             onPressed: () {
               ref.read(themeProvider.notifier).toggleTheme();
             },
           ),
-          
+
           // Notification Bell
           IconButton(
-            icon: const Icon(Icons.notifications_outlined,
-                color: AppColors.onSurfaceVariant),
+            icon: Icon(Icons.notifications_outlined,
+                color: context.colors.onSurfaceVariant),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Notifications coming soon')),

@@ -12,3 +12,6 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Firebase config: the repo is public, so share this file privately with teammates
+app/google-services.json

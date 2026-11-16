@@ -24,11 +24,11 @@ class ChatTab extends ConsumerWidget {
               length: 2,
               child: Column(
                 children: [
-                  const TabBar(
-                    indicatorColor: AppColors.primary,
-                    labelColor: AppColors.primary,
-                    unselectedLabelColor: AppColors.outline,
-                    tabs: [
+                  TabBar(
+                    indicatorColor: context.colors.primary,
+                    labelColor: context.colors.primary,
+                    unselectedLabelColor: context.colors.outline,
+                    tabs: const [
                       Tab(text: 'Inbox'),
                       Tab(text: 'Sent'),
                     ],
@@ -76,7 +76,7 @@ class _InboxDashboard extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceLow,
+                  color: context.colors.surfaceLow,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
@@ -89,13 +89,13 @@ class _InboxDashboard extends ConsumerWidget {
                           children: [
                             Container(
                               width: 8, height: 8,
-                              decoration: const BoxDecoration(color: AppColors.tertiary, shape: BoxShape.circle),
+                              decoration: BoxDecoration(color: context.colors.tertiary, shape: BoxShape.circle),
                             ),
                             const SizedBox(width: 8),
-                            const Text('INCOMING REQUEST', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.tertiary, letterSpacing: 1)),
+                            Text('INCOMING REQUEST', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: context.colors.tertiary, letterSpacing: 1)),
                           ],
                         ),
-                        const Text('Action Required', style: TextStyle(fontSize: 11, color: AppColors.outline)),
+                        Text('Action Required', style: TextStyle(fontSize: 11, color: context.colors.outline)),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -103,9 +103,9 @@ class _InboxDashboard extends ConsumerWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(Icons.person, size: 14, color: AppColors.primary),
+                        Icon(Icons.person, size: 14, color: context.colors.primary),
                         const SizedBox(width: 4),
-                        Text('From: ${pendingReq.senderName}', style: const TextStyle(fontSize: 12, color: AppColors.outline)),
+                        Text('From: ${pendingReq.senderName}', style: TextStyle(fontSize: 12, color: context.colors.outline)),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -117,8 +117,8 @@ class _InboxDashboard extends ConsumerWidget {
                           // For now, the requests are listed below this banner
                         },
                         style: TextButton.styleFrom(
-                          backgroundColor: AppColors.surfaceLowest,
-                          foregroundColor: AppColors.primary,
+                          backgroundColor: context.colors.surfaceLowest,
+                          foregroundColor: context.colors.primary,
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(99)),
                         ),
@@ -139,14 +139,14 @@ class _InboxDashboard extends ConsumerWidget {
             ],
 
             // --- Active Conversations (Received Requests) ---
-            const Text('ACTIVE CONVERSATIONS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1, color: AppColors.outline)),
+            Text('ACTIVE CONVERSATIONS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1, color: context.colors.outline)),
             const SizedBox(height: 12),
 
             if (requests.isEmpty)
-              const Center(
+              Center(
                 child: Padding(
-                  padding: EdgeInsets.all(32.0),
-                  child: Text('No messages yet.', style: TextStyle(color: AppColors.outline)),
+                  padding: const EdgeInsets.all(32.0),
+                  child: Text('No messages yet.', style: TextStyle(color: context.colors.outline)),
                 ),
               )
             else
@@ -168,10 +168,10 @@ class _InboxDashboard extends ConsumerWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.surfaceLowest,
+          color: context.colors.surfaceLowest,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4))],
-          border: isPending ? Border.all(color: AppColors.tertiary.withValues(alpha: 0.3), width: 1.5) : null,
+          border: isPending ? Border.all(color: context.colors.tertiary.withValues(alpha: 0.3), width: 1.5) : null,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -179,10 +179,10 @@ class _InboxDashboard extends ConsumerWidget {
             // Avatar
             CircleAvatar(
               radius: 24,
-              backgroundColor: AppColors.surfaceLow,
+              backgroundColor: context.colors.surfaceLow,
               child: Text(
                 req.senderName.isNotEmpty ? req.senderName[0].toUpperCase() : '?',
-                style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary),
+                style: TextStyle(fontWeight: FontWeight.bold, color: context.colors.primary),
               ),
             ),
             const SizedBox(width: 12),
@@ -201,7 +201,7 @@ class _InboxDashboard extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: isPending ? AppColors.tertiary.withValues(alpha: 0.1) : isAccepted ? AppColors.primary.withValues(alpha: 0.1) : AppColors.surfaceLow,
+                              color: isPending ? context.colors.tertiary.withValues(alpha: 0.1) : isAccepted ? context.colors.primary.withValues(alpha: 0.1) : context.colors.surfaceLow,
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -209,7 +209,7 @@ class _InboxDashboard extends ConsumerWidget {
                               style: TextStyle(
                                 fontSize: 9, 
                                 fontWeight: FontWeight.bold,
-                                color: isPending ? AppColors.tertiary : isAccepted ? AppColors.primary : AppColors.outline,
+                                color: isPending ? context.colors.tertiary : isAccepted ? context.colors.primary : context.colors.outline,
                               )
                             ),
                           ),
@@ -218,12 +218,12 @@ class _InboxDashboard extends ConsumerWidget {
                       // Use "Today" or a formatted date
                       Text(
                         _formatDate(req.id), 
-                        style: TextStyle(fontSize: 11, color: isPending ? AppColors.tertiary : AppColors.outline)
+                        style: TextStyle(fontSize: 11, color: isPending ? context.colors.tertiary : context.colors.outline)
                       ),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text('Wants: ${req.listing.title}', style: const TextStyle(fontSize: 12, color: AppColors.secondary, fontWeight: FontWeight.w600)),
+                  Text('Wants: ${req.listing.title}', style: TextStyle(fontSize: 12, color: context.colors.secondary, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 6),
                   Text(
                     '"${req.message}"',
@@ -231,7 +231,7 @@ class _InboxDashboard extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 13, 
-                      color: isPending ? AppColors.onSurface : AppColors.onSurfaceVariant,
+                      color: isPending ? context.colors.onSurface : context.colors.onSurfaceVariant,
                       fontStyle: FontStyle.italic,
                     ),
                   ),
@@ -269,17 +269,17 @@ class _InboxDashboard extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppColors.secondaryContainer.withValues(alpha: 0.3),
+                        color: context.colors.secondaryContainer.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Row(
+                          Row(
                             children: [
-                              Icon(Icons.lock_open, size: 14, color: AppColors.primary),
-                              SizedBox(width: 6),
-                              Text('Contact Unlocked', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary, fontSize: 12)),
+                              Icon(Icons.lock_open, size: 14, color: context.colors.primary),
+                              const SizedBox(width: 6),
+                              Text('Contact Unlocked', style: TextStyle(fontWeight: FontWeight.bold, color: context.colors.primary, fontSize: 12)),
                             ],
                           ),
                           const SizedBox(height: 4),
@@ -324,7 +324,7 @@ class _InboxDashboard extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: context.colors.error));
       }
     }
   }

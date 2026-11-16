@@ -19,20 +19,23 @@ class MainScaffold extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: AppColors.surface,
-      // Dark status bar icons on the light tabs (listing details leaves them white over its photo)
+      backgroundColor: context.colors.surface,
+      // Dark status bar icons on the light tabs, light ones in dark mode (listing details leaves them white over its photo)
       body: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: const SystemUiOverlayStyle(
+        value: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-          statusBarBrightness: Brightness.light,
+          statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+          statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
         ),
         child: navigationShell,
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: AppColors.surfaceLowest,
+          color: context.colors.surfaceLowest,
+          // The shadow doesn't show in dark mode and the bar matches the cards, a thin line separates them
+          border: isDark ? Border(top: BorderSide(color: context.colors.outlineVariant)) : null,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.06),
@@ -105,7 +108,7 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? AppColors.primary : AppColors.outline;
+    final color = selected ? context.colors.primary : context.colors.outline;
     return Expanded(
       child: InkWell(
         onTap: onTap,
@@ -146,11 +149,11 @@ class _PostButton extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: AppColors.primary,
+                color: context.colors.primary,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.3),
+                    color: context.colors.primary.withValues(alpha: 0.3),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -159,12 +162,12 @@ class _PostButton extends StatelessWidget {
               child: const Icon(Icons.add, color: Colors.white, size: 22),
             ),
             const SizedBox(height: 2),
-            const Text(
+            Text(
               'Post',
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w500,
-                color: AppColors.outline,
+                color: context.colors.outline,
               ),
             ),
           ],

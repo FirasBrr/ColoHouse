@@ -52,7 +52,7 @@ class _AuthFieldState extends State<AuthField> {
                 icon: Icon(
                   _obscured ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                   size: 20,
-                  color: AppColors.outline,
+                  color: context.colors.outline,
                 ),
                 onPressed: () => setState(() => _obscured = !_obscured),
               )

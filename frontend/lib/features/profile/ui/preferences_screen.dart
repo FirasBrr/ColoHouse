@@ -147,7 +147,7 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.colors.surface,
       appBar: AppBar(title: const Text('Roommate Preferences')),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -161,11 +161,11 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.errorContainer,
+                      color: context.colors.errorContainer,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(_error!,
-                        style: const TextStyle(color: AppColors.error)),
+                        style: TextStyle(color: context.colors.error)),
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -219,14 +219,14 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 16),
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceLowest,
-                      border: Border.all(color: AppColors.outlineVariant),
+                      color: context.colors.surfaceLowest,
+                      border: Border.all(color: context.colors.outlineVariant),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.event_available_outlined,
-                            size: 20, color: AppColors.onSurfaceVariant),
+                        Icon(Icons.event_available_outlined,
+                            size: 20, color: context.colors.onSurfaceVariant),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
@@ -236,13 +236,13 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
                             style: TextStyle(
                               fontSize: 14,
                               color: _moveInDate == null
-                                  ? AppColors.outline
-                                  : AppColors.onSurface,
+                                  ? context.colors.outline
+                                  : context.colors.onSurface,
                             ),
                           ),
                         ),
-                        const Icon(Icons.calendar_today_outlined,
-                            size: 20, color: AppColors.primary),
+                        Icon(Icons.calendar_today_outlined,
+                            size: 20, color: context.colors.primary),
                       ],
                     ),
                   ),
@@ -315,7 +315,7 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 4, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceLowest,
+                    color: context.colors.surfaceLowest,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
@@ -391,15 +391,15 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: AppColors.primary),
+        Icon(icon, size: 18, color: context.colors.primary),
         const SizedBox(width: 8),
         Text(
           title.toUpperCase(),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
             letterSpacing: 1,
-            color: AppColors.primary,
+            color: context.colors.primary,
           ),
         ),
       ],
@@ -433,7 +433,7 @@ class _SliderRow extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(icon, size: 18, color: AppColors.primary),
+            Icon(icon, size: 18, color: context.colors.primary),
             const SizedBox(width: 8),
             Text('$label: ${value.round()}',
                 style: const TextStyle(
@@ -443,7 +443,7 @@ class _SliderRow extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: AppColors.secondaryContainer,
+                color: context.colors.secondaryContainer,
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(tag,
@@ -457,7 +457,7 @@ class _SliderRow extends StatelessWidget {
           min: 1,
           max: 5,
           divisions: 4,
-          activeColor: AppColors.primary,
+          activeColor: context.colors.primary,
           label: value.round().toString(),
           onChanged: onChanged,
         ),
@@ -467,11 +467,11 @@ class _SliderRow extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(leftLabel,
-                  style: const TextStyle(
-                      fontSize: 11, color: AppColors.outline)),
+                  style: TextStyle(
+                      fontSize: 11, color: context.colors.outline)),
               Text(rightLabel,
-                  style: const TextStyle(
-                      fontSize: 11, color: AppColors.outline)),
+                  style: TextStyle(
+                      fontSize: 11, color: context.colors.outline)),
             ],
           ),
         ),

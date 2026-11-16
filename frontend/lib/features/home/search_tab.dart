@@ -76,7 +76,7 @@ class _SearchTabState extends ConsumerState<SearchTab> {
                   child: Container(
                     height: 50,
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceLowest,
+                      color: context.colors.surfaceLowest,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
                     ),
@@ -86,7 +86,7 @@ class _SearchTabState extends ConsumerState<SearchTab> {
                       onSubmitted: (v) => setState(() => _filters = _filters.copyWith(query: v.trim())),
                       decoration: InputDecoration(
                         hintText: 'Search rooms, areas...',
-                        prefixIcon: const Icon(Icons.search, color: AppColors.primary),
+                        prefixIcon: Icon(Icons.search, color: context.colors.primary),
                         suffixIcon: _filters.query.isNotEmpty
                             ? IconButton(icon: const Icon(Icons.close, size: 18), onPressed: () {
                                 _searchController.clear();
@@ -114,7 +114,7 @@ class _SearchTabState extends ConsumerState<SearchTab> {
               height: 44,
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: AppColors.surfaceLow,
+                color: context.colors.surfaceLow,
                 borderRadius: BorderRadius.circular(99),
               ),
               child: Row(
@@ -139,13 +139,13 @@ class _SearchTabState extends ConsumerState<SearchTab> {
                       listingsAsync.hasValue
                           ? '${listingsAsync.value!.length} ${listingsAsync.value!.length == 1 ? 'place' : 'places'} found'
                           : listingsAsync.isLoading ? 'Searching...' : '',
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.onSurfaceVariant),
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.colors.onSurfaceVariant),
                     ),
                   ),
                   if (activeFilters > 0)
                     TextButton(
                       onPressed: () => setState(() => _filters = _filters.cleared()),
-                      style: TextButton.styleFrom(visualDensity: VisualDensity.compact, foregroundColor: AppColors.primary),
+                      style: TextButton.styleFrom(visualDensity: VisualDensity.compact, foregroundColor: context.colors.primary),
                       child: const Text('Clear filters', style: TextStyle(fontWeight: FontWeight.w600)),
                     ),
                   const SizedBox(width: 4),
@@ -173,7 +173,7 @@ class _SearchTabState extends ConsumerState<SearchTab> {
                       }
                       return RefreshIndicator(
                         onRefresh: _refresh,
-                        color: AppColors.primary,
+                        color: context.colors.primary,
                         child: ListView.separated(
                           physics: const AlwaysScrollableScrollPhysics(),
                           padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
@@ -190,8 +190,8 @@ class _SearchTabState extends ConsumerState<SearchTab> {
                       );
                     },
                   )
-                : const Center(
-                    child: Text('Roommate matching coming soon!', style: TextStyle(color: AppColors.outline)),
+                : Center(
+                    child: Text('Roommate matching coming soon!', style: TextStyle(color: context.colors.outline)),
                   ),
           ),
         ],
@@ -207,12 +207,12 @@ class _SearchTabState extends ConsumerState<SearchTab> {
         Container(
           width: 50, height: 50,
           decoration: BoxDecoration(
-            color: active ? AppColors.primary : AppColors.surfaceLowest,
+            color: active ? context.colors.primary : context.colors.surfaceLowest,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
           ),
           child: IconButton(
-            icon: Icon(Icons.tune, color: active ? Colors.white : AppColors.primary),
+            icon: Icon(Icons.tune, color: active ? Colors.white : context.colors.primary),
             tooltip: 'Filters',
             onPressed: _openFilters,
           ),
@@ -228,13 +228,13 @@ class _SearchTabState extends ConsumerState<SearchTab> {
                 padding: const EdgeInsets.symmetric(horizontal: 5),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: AppColors.tertiary,
+                  color: context.colors.tertiary,
                   borderRadius: BorderRadius.circular(99),
-                  border: Border.all(color: AppColors.surfaceLowest, width: 2),
+                  border: Border.all(color: context.colors.surfaceLowest, width: 2),
                 ),
                 child: Text(
                   '$activeFilters',
-                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800),
+                  style: TextStyle(color: context.colors.surfaceLowest, fontSize: 11, fontWeight: FontWeight.w800),
                 ),
               ),
             ),
@@ -247,7 +247,7 @@ class _SearchTabState extends ConsumerState<SearchTab> {
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLow,
+        color: context.colors.surfaceLow,
         borderRadius: BorderRadius.circular(99),
       ),
       child: Row(
@@ -267,18 +267,18 @@ class _SearchTabState extends ConsumerState<SearchTab> {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.transparent,
+          color: isSelected ? context.colors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(99),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: isSelected ? Colors.white : AppColors.onSurfaceVariant),
+            Icon(icon, size: 16, color: isSelected ? Colors.white : context.colors.onSurfaceVariant),
             const SizedBox(width: 4),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? Colors.white : AppColors.onSurfaceVariant,
+                color: isSelected ? Colors.white : context.colors.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
                 fontSize: 12,
               ),
@@ -296,18 +296,18 @@ class _SearchTabState extends ConsumerState<SearchTab> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.search_off, size: 48, color: AppColors.outlineVariant),
+            Icon(Icons.search_off, size: 48, color: context.colors.outlineVariant),
             const SizedBox(height: 12),
             Text(
               hasFilters ? 'No listings match these filters.' : 'No listings found.',
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.onSurfaceVariant),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: context.colors.onSurfaceVariant),
             ),
             if (hasFilters) ...[
               const SizedBox(height: 8),
               TextButton(
                 onPressed: () => setState(() => _filters = _filters.cleared()),
-                child: const Text('Clear filters', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
+                child: Text('Clear filters', style: TextStyle(color: context.colors.primary, fontWeight: FontWeight.w600)),
               ),
             ],
           ],
@@ -323,15 +323,15 @@ class _SearchTabState extends ConsumerState<SearchTab> {
         onTap: () => setState(() => _selectedTab = index),
         child: Container(
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary : Colors.transparent,
+            color: isSelected ? context.colors.primary : Colors.transparent,
             borderRadius: BorderRadius.circular(99),
-            boxShadow: isSelected ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 2))] : [],
+            boxShadow: isSelected ? [BoxShadow(color: context.colors.primary.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 2))] : [],
           ),
           alignment: Alignment.center,
           child: Text(
             text,
             style: TextStyle(
-              color: isSelected ? Colors.white : AppColors.onSurfaceVariant,
+              color: isSelected ? Colors.white : context.colors.onSurfaceVariant,
               fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
               fontSize: 14,
             ),

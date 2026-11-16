@@ -33,18 +33,18 @@ class HomeScreen extends ConsumerWidget {
                 // Greeting
                 Text(
                   _greeting(user?.firstName),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.onSurface,
+                    color: context.colors.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
+                Text(
                   "Here's what's happening near you",
                   style: TextStyle(
                     fontSize: 13,
-                    color: AppColors.outline,
+                    color: context.colors.outline,
                   ),
                 ),
                 const SizedBox(height: 20),

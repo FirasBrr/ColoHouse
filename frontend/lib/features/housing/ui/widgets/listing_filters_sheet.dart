@@ -12,7 +12,7 @@ Future<ListingFilters?> showListingFiltersSheet(BuildContext context, ListingFil
     isScrollControlled: true,
     useSafeArea: true,
     useRootNavigator: true, // Cover the bottom navigation bar
-    backgroundColor: AppColors.surfaceLowest,
+    backgroundColor: context.colors.surfaceLowest,
     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
     builder: (_) => ListingFiltersSheet(initial: current),
   );
@@ -146,16 +146,16 @@ class _ListingFiltersSheetState extends ConsumerState<ListingFiltersSheet> {
             Container(
               margin: const EdgeInsets.only(top: 10),
               width: 40, height: 4,
-              decoration: BoxDecoration(color: AppColors.outlineVariant, borderRadius: BorderRadius.circular(99)),
+              decoration: BoxDecoration(color: context.colors.outlineVariant, borderRadius: BorderRadius.circular(99)),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 8, 8),
               child: Row(
                 children: [
-                  const Text('Filters', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.onSurface)),
+                  Text('Filters', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: context.colors.onSurface)),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.close, color: AppColors.onSurfaceVariant),
+                    icon: Icon(Icons.close, color: context.colors.onSurfaceVariant),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -173,7 +173,7 @@ class _ListingFiltersSheetState extends ConsumerState<ListingFiltersSheet> {
                     const _SectionLabel('City'),
                     citiesAsync.when(
                       loading: () => const LinearProgressIndicator(),
-                      error: (e, _) => Text('Could not load cities: $e', style: const TextStyle(color: AppColors.error)),
+                      error: (e, _) => Text('Could not load cities: $e', style: TextStyle(color: context.colors.error)),
                       data: (cities) => DropdownButtonFormField<int?>(
                         key: ValueKey('city-$_cityId'), // Rebuild after Reset
                         initialValue: cities.any((c) => c.id == _cityId) ? _cityId : null,
@@ -200,12 +200,12 @@ class _ListingFiltersSheetState extends ConsumerState<ListingFiltersSheet> {
                           selected: selected,
                           showCheckmark: false,
                           onSelected: (_) => setState(() => _roomType = e.key),
-                          selectedColor: AppColors.primary,
-                          backgroundColor: AppColors.surfaceLow,
+                          selectedColor: context.colors.primary,
+                          backgroundColor: context.colors.surfaceLow,
                           side: BorderSide.none,
                           shape: const StadiumBorder(),
                           labelStyle: TextStyle(
-                            color: selected ? Colors.white : AppColors.onSurfaceVariant,
+                            color: selected ? Colors.white : context.colors.onSurfaceVariant,
                             fontWeight: FontWeight.w600,
                           ),
                         );
@@ -218,9 +218,9 @@ class _ListingFiltersSheetState extends ConsumerState<ListingFiltersSheet> {
                     Row(
                       children: [
                         Expanded(child: _rentField(_minRent, 'Min')),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 10),
-                          child: Text('-', style: TextStyle(color: AppColors.outline, fontSize: 18)),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          child: Text('-', style: TextStyle(color: context.colors.outline, fontSize: 18)),
                         ),
                         Expanded(child: _rentField(_maxRent, 'Max')),
                       ],
@@ -228,7 +228,7 @@ class _ListingFiltersSheetState extends ConsumerState<ListingFiltersSheet> {
                     if (_rentError != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 6, left: 4),
-                        child: Text(_rentError!, style: const TextStyle(color: AppColors.error, fontSize: 12)),
+                        child: Text(_rentError!, style: TextStyle(color: context.colors.error, fontSize: 12)),
                       ),
                     const SizedBox(height: 20),
 
@@ -249,7 +249,7 @@ class _ListingFiltersSheetState extends ConsumerState<ListingFiltersSheet> {
                         ),
                         child: Text(
                           _availableBy == null ? 'Any date' : ListingFilters.formatDate(_availableBy!),
-                          style: TextStyle(fontSize: 16, color: _availableBy == null ? AppColors.outline : AppColors.onSurface),
+                          style: TextStyle(fontSize: 16, color: _availableBy == null ? context.colors.outline : context.colors.onSurface),
                         ),
                       ),
                     ),
@@ -259,7 +259,7 @@ class _ListingFiltersSheetState extends ConsumerState<ListingFiltersSheet> {
                     const _SectionLabel('Distance'),
                     Row(
                       children: [
-                        Icon(Icons.radar, size: 18, color: hasCity ? AppColors.primary : AppColors.outline),
+                        Icon(Icons.radar, size: 18, color: hasCity ? context.colors.primary : context.colors.outline),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -271,7 +271,7 @@ class _ListingFiltersSheetState extends ConsumerState<ListingFiltersSheet> {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: hasCity ? AppColors.onSurface : AppColors.outline,
+                              color: hasCity ? context.colors.onSurface : context.colors.outline,
                             ),
                           ),
                         ),
@@ -282,7 +282,7 @@ class _ListingFiltersSheetState extends ConsumerState<ListingFiltersSheet> {
                       min: 0,
                       max: _maxRadiusKm,
                       divisions: _maxRadiusKm.toInt(),
-                      activeColor: AppColors.primary,
+                      activeColor: context.colors.primary,
                       label: _radiusKm == null ? 'Any' : '${_radiusKm!.round()} km',
                       onChanged: hasCity ? (v) => setState(() => _radiusKm = v == 0 ? null : v) : null,
                     ),
@@ -319,8 +319,8 @@ class _ListingFiltersSheetState extends ConsumerState<ListingFiltersSheet> {
                         onPressed: _reset,
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size.fromHeight(52),
-                          foregroundColor: AppColors.primary,
-                          side: const BorderSide(color: AppColors.outlineVariant),
+                          foregroundColor: context.colors.primary,
+                          side: BorderSide(color: context.colors.outlineVariant),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                         child: const Text('Reset', style: TextStyle(fontWeight: FontWeight.w600)),
@@ -365,7 +365,7 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(text, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.onSurface)),
+      child: Text(text, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: context.colors.onSurface)),
     );
   }
 }

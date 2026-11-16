@@ -21,10 +21,10 @@ class PlaceholderCard extends StatelessWidget {
       height: height,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLowest,
+        color: context.colors.surfaceLowest,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.outlineVariant.withValues(alpha: 0.5),
+          color: context.colors.outlineVariant.withValues(alpha: 0.5),
         ),
         boxShadow: [
           BoxShadow(
@@ -40,28 +40,28 @@ class PlaceholderCard extends StatelessWidget {
           Container(
             width: 48,
             height: 48,
-            decoration: const BoxDecoration(
-              color: AppColors.surfaceLow,
+            decoration: BoxDecoration(
+              color: context.colors.surfaceLow,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, size: 24, color: AppColors.primary),
+            child: Icon(icon, size: 24, color: context.colors.primary),
           ),
           const SizedBox(height: 12),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: AppColors.onSurface,
+              color: context.colors.onSurface,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 6),
           Text(
             subtitle,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: AppColors.outline,
+              color: context.colors.outline,
               height: 1.4,
             ),
             textAlign: TextAlign.center,

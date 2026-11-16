@@ -62,7 +62,7 @@ class _EditListingScreenState extends ConsumerState<EditListingScreen> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            style: FilledButton.styleFrom(backgroundColor: context.colors.error),
             onPressed: () => Navigator.pop(ctx, true), 
             child: const Text('Delete')
           ),
@@ -92,7 +92,7 @@ class _EditListingScreenState extends ConsumerState<EditListingScreen> {
     } on AuthException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
+          SnackBar(content: Text(e.message), backgroundColor: context.colors.error),
         );
       }
     }
@@ -136,7 +136,7 @@ class _EditListingScreenState extends ConsumerState<EditListingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.colors.surface,
       appBar: AppBar(title: const Text('Edit Listing')),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -149,8 +149,8 @@ class _EditListingScreenState extends ConsumerState<EditListingScreen> {
                 if (_error != null) ...[
                   Container(
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: AppColors.errorContainer, borderRadius: BorderRadius.circular(10)),
-                    child: Text(_error!, style: const TextStyle(color: AppColors.error)),
+                    decoration: BoxDecoration(color: context.colors.errorContainer, borderRadius: BorderRadius.circular(10)),
+                    child: Text(_error!, style: TextStyle(color: context.colors.error)),
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -159,7 +159,7 @@ class _EditListingScreenState extends ConsumerState<EditListingScreen> {
                 if (_currentPhotos.isNotEmpty) ...[
                   const Text('Current Photos', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  const Text('Tap the X to remove a photo', style: TextStyle(fontSize: 12, color: AppColors.outline)),
+                  Text('Tap the X to remove a photo', style: TextStyle(fontSize: 12, color: context.colors.outline)),
                   const SizedBox(height: 12),
                   SizedBox(
                     height: 100,
@@ -183,7 +183,7 @@ class _EditListingScreenState extends ConsumerState<EditListingScreen> {
                                 bottom: 4, left: 4,
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(6)),
+                                  decoration: BoxDecoration(color: context.colors.primary, borderRadius: BorderRadius.circular(6)),
                                   child: const Text('Cover', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
                                 ),
                               ),
@@ -209,9 +209,9 @@ class _EditListingScreenState extends ConsumerState<EditListingScreen> {
                 // Status Toggle
                 Container(
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceLowest,
+                    color: context.colors.surfaceLowest,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.outlineVariant),
+                    border: Border.all(color: context.colors.outlineVariant),
                   ),
                   child: SwitchListTile(
                     title: const Text('Listing is Active'),

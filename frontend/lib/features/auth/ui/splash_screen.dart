@@ -10,14 +10,21 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  // Theme is cached here because dispose() can't look it up anymore
+  late AppPalette _colors;
+  late bool _isDark;
+
+  // Was initState: the theme can't be read there (and may change once the saved mode loads)
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _colors = context.colors;
+    _isDark = Theme.of(context).brightness == Brightness.dark;
     SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
+      SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: AppColors.primary,
+        systemNavigationBarColor: _colors.primary,
         systemNavigationBarIconBrightness: Brightness.light,
       ),
     );
@@ -26,20 +33,20 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
+      value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: AppColors.primary,
+        systemNavigationBarColor: context.colors.primary,
         systemNavigationBarIconBrightness: Brightness.light,
       ),
       child: Scaffold(
-        backgroundColor: AppColors.primary,
+        backgroundColor: context.colors.primary,
         body: SizedBox.expand(
           child: Stack(
             fit: StackFit.expand,
             children: [
               // Full-bleed background color
-              Container(color: AppColors.primary),
+              Container(color: context.colors.primary),
 
               // Decorative top-left circle
               Positioned(
@@ -50,7 +57,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   height: 320,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.secondaryContainer
+                    color: context.colors.secondaryContainer
                         .withValues(alpha: 0.10),
                   ),
                 ),
@@ -92,10 +99,10 @@ class _SplashScreenState extends State<SplashScreen> {
                           ),
                         ],
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.home_work_outlined,
                         size: 48,
-                        color: AppColors.primary,
+                        color: context.colors.primary,
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -163,11 +170,12 @@ class _SplashScreenState extends State<SplashScreen> {
   void dispose() {
     // Reset overlay style when leaving splash
     SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
+      SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
+        statusBarIconBrightness: _isDark ? Brightness.light : Brightness.dark,
+        systemNavigationBarColor: _colors.surfaceLowest,
+        systemNavigationBarIconBrightness:
+            _isDark ? Brightness.light : Brightness.dark,
       ),
     );
     super.dispose();

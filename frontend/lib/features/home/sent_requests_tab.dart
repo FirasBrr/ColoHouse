@@ -17,7 +17,7 @@ class SentRequestsTab extends ConsumerWidget {
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('No')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            style: FilledButton.styleFrom(backgroundColor: ctx.colors.error),
             onPressed: () => Navigator.pop(ctx, true), 
             child: const Text('Yes, Cancel')
           ),
@@ -39,7 +39,7 @@ class SentRequestsTab extends ConsumerWidget {
     } on AuthException catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
+          SnackBar(content: Text(e.message), backgroundColor: context.colors.error),
         );
       }
     }
@@ -54,22 +54,22 @@ class SentRequestsTab extends ConsumerWidget {
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (requests) {
         if (requests.isEmpty) {
-          return const Center(
+          return Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.outbox_outlined, size: 64, color: AppColors.outline),
-                SizedBox(height: 16),
-                Text('No sent requests', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-                SizedBox(height: 8),
-                Text('When you request a room, it will appear here.', style: TextStyle(color: AppColors.outline)),
+                Icon(Icons.outbox_outlined, size: 64, color: context.colors.outline),
+                const SizedBox(height: 16),
+                const Text('No sent requests', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                Text('When you request a room, it will appear here.', style: TextStyle(color: context.colors.outline)),
               ],
             ),
           );
         }
 
         return RefreshIndicator(
-          color: AppColors.primary,
+          color: context.colors.primary,
           onRefresh: () async => ref.invalidate(sentRequestsProvider),
           child: ListView.separated(
             padding: const EdgeInsets.all(16),
@@ -102,7 +102,7 @@ class _SentRequestCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceLowest,
+        color: context.colors.surfaceLowest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
       ),
@@ -116,7 +116,7 @@ class _SentRequestCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                   child: request.listing.photo != null
                       ? Image.network(request.listing.photo!, width: 50, height: 50, fit: BoxFit.cover)
-                      : Container(width: 50, height: 50, color: AppColors.surfaceLow, child: const Icon(Icons.home)),
+                      : Container(width: 50, height: 50, color: context.colors.surfaceLow, child: const Icon(Icons.home)),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -124,7 +124,7 @@ class _SentRequestCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(request.listing.title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                      Text('To: ${request.ownerName}', style: const TextStyle(fontSize: 12, color: AppColors.outline)),
+                      Text('To: ${request.ownerName}', style: TextStyle(fontSize: 12, color: context.colors.outline)),
                     ],
                   ),
                 ),
@@ -154,18 +154,18 @@ class _SentRequestCard extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.secondaryContainer.withValues(alpha: 0.3),
+                  color: context.colors.secondaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.5)),
+                  border: Border.all(color: context.colors.primary.withValues(alpha: 0.5)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Icon(Icons.check_circle, size: 16, color: AppColors.primary),
-                        SizedBox(width: 8),
-                        Text('Request Accepted!', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+                        Icon(Icons.check_circle, size: 16, color: context.colors.primary),
+                        const SizedBox(width: 8),
+                        Text('Request Accepted!', style: TextStyle(fontWeight: FontWeight.bold, color: context.colors.primary)),
                       ],
                     ),
                     const SizedBox(height: 8),

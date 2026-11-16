@@ -55,7 +55,7 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
       ref.invalidate(sentRequestsProvider);
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Application sent successfully!')));
     } on AuthException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message), backgroundColor: AppColors.error));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message), backgroundColor: context.colors.error));
     } finally {
       if (mounted) setState(() => _sendingRequest = false);
     }
@@ -70,7 +70,7 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            style: FilledButton.styleFrom(backgroundColor: context.colors.error),
             onPressed: () => Navigator.pop(ctx, true), 
             child: const Text('Delete')
           ),
@@ -88,7 +88,7 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
         context.pop(); 
       }
     } on AuthException catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message), backgroundColor: AppColors.error));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message), backgroundColor: context.colors.error));
     }
   }
 
@@ -98,7 +98,7 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
     final currentUser = ref.watch(authProvider).user;
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.colors.surface,
       body: listingAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
@@ -123,6 +123,10 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
               : null;
           // The refetch after sending still shows the old my_request, keep the button busy
           bool isSending = _sendingRequest || listingAsync.isLoading;
+          // Dark mode: the bottom bar is the same color as the cards and its shadow doesn't show,
+          // so it gets a thin top line (and no see-through, light text showed through it)
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          final barBorder = isDark ? Border(top: BorderSide(color: context.colors.outlineVariant)) : null;
 
           return Stack(
             children: [
@@ -134,34 +138,34 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                     pinned: true,
                     // Clear over the photo, solid once collapsed so the content doesn't show through
                     backgroundColor: WidgetStateColor.resolveWith(
-                      (states) => states.contains(WidgetState.scrolledUnder) ? AppColors.surface : Colors.transparent,
+                      (states) => states.contains(WidgetState.scrolledUnder) ? context.colors.surface : Colors.transparent,
                     ),
                     surfaceTintColor: Colors.transparent,
                     elevation: 0,
                     leading: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: CircleAvatar(
-                        backgroundColor: Colors.white.withValues(alpha: 0.9),
+                        backgroundColor: context.colors.surfaceLowest.withValues(alpha: 0.9),
                         child: IconButton(
-                          icon: const Icon(Icons.arrow_back, color: AppColors.onSurface),
+                          icon: Icon(Icons.arrow_back, color: context.colors.onSurface),
                           onPressed: () => context.pop(),
                         ),
                       ),
                     ),
                     actions: [
                       CircleAvatar(
-                        backgroundColor: Colors.white.withValues(alpha: 0.9),
+                        backgroundColor: context.colors.surfaceLowest.withValues(alpha: 0.9),
                         child: IconButton(
-                          icon: Icon(_isFavorite ? Icons.favorite : Icons.favorite_border, color: AppColors.primary),
+                          icon: Icon(_isFavorite ? Icons.favorite : Icons.favorite_border, color: context.colors.primary),
                           onPressed: () => setState(() => _isFavorite = !_isFavorite),
                         ),
                       ),
                       const SizedBox(width: 8),
                       if (isOwner)
                         CircleAvatar(
-                          backgroundColor: Colors.white.withValues(alpha: 0.9),
+                          backgroundColor: context.colors.surfaceLowest.withValues(alpha: 0.9),
                           child: PopupMenuButton<String>(
-                            icon: const Icon(Icons.more_vert, color: AppColors.onSurface),
+                            icon: Icon(Icons.more_vert, color: context.colors.onSurface),
                             onSelected: (value) {
                               if (value == 'edit') {
                                 context.push('/listing/${listing.id}/edit', extra: listing);
@@ -171,7 +175,7 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                             },
                             itemBuilder: (context) => [
                               const PopupMenuItem(value: 'edit', child: Text('Edit / Pause Listing')),
-                              const PopupMenuItem(value: 'delete', child: Text('Delete Listing', style: TextStyle(color: AppColors.error))),
+                              PopupMenuItem(value: 'delete', child: Text('Delete Listing', style: TextStyle(color: context.colors.error))),
                             ],
                           ),
                         ),
@@ -227,7 +231,7 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: AppColors.surfaceLowest,
+                              color: context.colors.surfaceLowest,
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4))],
                             ),
@@ -237,8 +241,8 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                                 if (listing.isVerifiedOwner) ...[
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(color: AppColors.secondaryContainer, borderRadius: BorderRadius.circular(99)),
-                                    child: const Text('VERIFIED HOST', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primaryDark)),
+                                    decoration: BoxDecoration(color: context.colors.secondaryContainer, borderRadius: BorderRadius.circular(99)),
+                                    child: Text('VERIFIED HOST', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: context.colors.primaryDark)),
                                   ),
                                   const SizedBox(height: 12),
                                 ],
@@ -246,16 +250,16 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                                 const SizedBox(height: 8),
                                 Row(
                                   children: [
-                                    const Icon(Icons.location_on, size: 18, color: AppColors.primary),
+                                    Icon(Icons.location_on, size: 18, color: context.colors.primary),
                                     const SizedBox(width: 4),
-                                    Expanded(child: Text(listing.cityName, style: const TextStyle(fontSize: 14, color: AppColors.onSurfaceVariant))),
+                                    Expanded(child: Text(listing.cityName, style: TextStyle(fontSize: 14, color: context.colors.onSurfaceVariant))),
                                   ],
                                 ),
                                 
                                 const SizedBox(height: 16),
                                 Container(
                                   padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(color: AppColors.surfaceLow, borderRadius: BorderRadius.circular(12)),
+                                  decoration: BoxDecoration(color: context.colors.surfaceLow, borderRadius: BorderRadius.circular(12)),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
@@ -265,20 +269,20 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                                           RichText(
                                             text: TextSpan(
                                               children: [
-                                                TextSpan(text: '${listing.rent} TND', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.primary)),
-                                                const TextSpan(text: ' / month', style: TextStyle(fontSize: 13, color: AppColors.onSurfaceVariant)),
+                                                TextSpan(text: '${listing.rent} TND', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: context.colors.primary)),
+                                                TextSpan(text: ' / month', style: TextStyle(fontSize: 13, color: context.colors.onSurfaceVariant)),
                                               ],
                                             ),
                                           ),
                                           const SizedBox(height: 4),
-                                          const Text('Utilities included', style: TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w500)),
+                                          Text('Utilities included', style: TextStyle(fontSize: 12, color: context.colors.primary, fontWeight: FontWeight.w500)),
                                         ],
                                       ),
                                       if (listing.deposit > 0)
                                         Column(
                                           crossAxisAlignment: CrossAxisAlignment.end,
                                           children: [
-                                            const Text('Refundable Deposit', style: TextStyle(fontSize: 11, color: AppColors.outline)),
+                                            Text('Refundable Deposit', style: TextStyle(fontSize: 11, color: context.colors.outline)),
                                             Text('${listing.deposit} TND', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                                           ],
                                         ),
@@ -306,7 +310,7 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: AppColors.surfaceLowest,
+                              color: context.colors.surfaceLowest,
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4))],
                             ),
@@ -315,7 +319,7 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                               children: [
                                 const Text('About this place', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                                 const SizedBox(height: 8),
-                                Text(listing.description, style: const TextStyle(fontSize: 14, height: 1.5, color: AppColors.onSurfaceVariant)),
+                                Text(listing.description, style: TextStyle(fontSize: 14, height: 1.5, color: context.colors.onSurfaceVariant)),
                               ],
                             ),
                           ),
@@ -326,7 +330,7 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                             Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: AppColors.surfaceLowest,
+                                color: context.colors.surfaceLowest,
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4))],
                               ),
@@ -350,8 +354,8 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                                             height: 120,
                                             fit: BoxFit.cover,
                                             errorBuilder: (_, __, ___) => Container(
-                                              width: 160, height: 120, color: AppColors.surfaceLow,
-                                              child: const Icon(Icons.broken_image, color: AppColors.outline),
+                                              width: 160, height: 120, color: context.colors.surfaceLow,
+                                              child: Icon(Icons.broken_image, color: context.colors.outline),
                                             ),
                                           ),
                                         );
@@ -369,7 +373,7 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                             Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: AppColors.surfaceLowest,
+                                color: context.colors.surfaceLowest,
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4))],
                               ),
@@ -378,7 +382,7 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                                 children: [
                                   const Text('House Rules', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                                   const SizedBox(height: 8),
-                                  Text(listing.rules, style: const TextStyle(fontSize: 14, color: AppColors.onSurfaceVariant)),
+                                  Text(listing.rules, style: TextStyle(fontSize: 14, color: context.colors.onSurfaceVariant)),
                                 ],
                               ),
                             ),
@@ -389,7 +393,7 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: AppColors.surfaceLowest,
+                              color: context.colors.surfaceLowest,
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4))],
                             ),
@@ -400,7 +404,7 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                                 const SizedBox(height: 12),
                                 Container(
                                   height: 160,
-                                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.outlineVariant)),
+                                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: context.colors.outlineVariant)),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(12),
                                     child: FlutterMap(
@@ -412,7 +416,7 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                                       children: [
                                         TileLayer(urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', userAgentPackageName: 'com.colohouse.app'),
                                         MarkerLayer(markers: [
-                                          Marker(point: LatLng(listing.latitude, listing.longitude), width: 40, height: 40, child: const Icon(Icons.location_on, color: AppColors.primary, size: 40)),
+                                          Marker(point: LatLng(listing.latitude, listing.longitude), width: 40, height: 40, child: Icon(Icons.location_on, color: context.colors.primary, size: 40)),
                                         ]),
                                       ],
                                     ),
@@ -427,7 +431,7 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: AppColors.surfaceLowest,
+                              color: context.colors.surfaceLowest,
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4))],
                             ),
@@ -435,8 +439,8 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                               children: [
                                 CircleAvatar(
                                   radius: 24,
-                                  backgroundColor: AppColors.secondaryContainer,
-                                  child: const Icon(Icons.person, color: AppColors.primaryDark),
+                                  backgroundColor: context.colors.secondaryContainer,
+                                  child: Icon(Icons.person, color: context.colors.primaryDark),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
@@ -448,7 +452,7 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                                           Text('Host: ${listing.ownerName}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
                                           if (listing.isVerifiedOwner) ...[
                                             const SizedBox(width: 4),
-                                            const Icon(Icons.verified, size: 14, color: AppColors.primary),
+                                            Icon(Icons.verified, size: 14, color: context.colors.primary),
                                           ],
                                         ],
                                       ),
@@ -458,7 +462,7 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                                 if (listing.contactVisible && listing.ownerPhone != null)
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                    decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(12)),
+                                    decoration: BoxDecoration(color: context.colors.primary, borderRadius: BorderRadius.circular(12)),
                                     child: Text(listing.ownerPhone!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
                                   ),
                               ],
@@ -481,7 +485,8 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceLowest.withValues(alpha: 0.95),
+                      color: isDark ? context.colors.surfaceLowest : context.colors.surfaceLowest.withValues(alpha: 0.95),
+                      border: barBorder,
                       boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 20, offset: const Offset(0, -4))],
                     ),
                     // Bottom inset only, the status bar inset made the bar ~50px too tall
@@ -503,12 +508,12 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                                   RichText(
                                     text: TextSpan(
                                       children: [
-                                        TextSpan(text: '${listing.rent} TND', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.primary)),
-                                        const TextSpan(text: ' / mo', style: TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant)),
+                                        TextSpan(text: '${listing.rent} TND', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: context.colors.primary)),
+                                        TextSpan(text: ' / mo', style: TextStyle(fontSize: 12, color: context.colors.onSurfaceVariant)),
                                       ],
                                     ),
                                   ),
-                                  Text('Available ${listing.availableFrom}', style: const TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w600)),
+                                  Text('Available ${listing.availableFrom}', style: TextStyle(fontSize: 11, color: context.colors.primary, fontWeight: FontWeight.w600)),
                                 ],
                               ),
                               const SizedBox(width: 16),
@@ -539,7 +544,7 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                   bottom: 0, left: 0, right: 0,
                   child: Container(
                     padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(color: AppColors.surfaceLowest, boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -4))]),
+                    decoration: BoxDecoration(color: context.colors.surfaceLowest, border: barBorder, boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -4))]),
                     child: SafeArea(
                       top: false,
                       child: FilledButton.icon(
@@ -549,8 +554,8 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(52), 
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(99)),
-                          disabledBackgroundColor: AppColors.surfaceLow,
-                          disabledForegroundColor: AppColors.primary,
+                          disabledBackgroundColor: context.colors.surfaceLow,
+                          disabledForegroundColor: context.colors.primary,
                         ),
                       ),
                     ),
@@ -576,12 +581,12 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
 
   Widget _buildPreviousRequestNote(String status, String note) {
     final isDeclined = status == 'declined';
-    final color = isDeclined ? AppColors.error : AppColors.onSurfaceVariant;
+    final color = isDeclined ? context.colors.error : context.colors.onSurfaceVariant;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: isDeclined ? AppColors.errorContainer : AppColors.surfaceLow,
+        color: isDeclined ? context.colors.errorContainer : context.colors.surfaceLow,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -597,13 +602,13 @@ class _ListingDetailsScreenState extends ConsumerState<ListingDetailsScreen> {
   Widget _buildSpecBadge(IconData icon, String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(color: AppColors.surfaceLow, borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(color: context.colors.surfaceLow, borderRadius: BorderRadius.circular(8)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: AppColors.primary),
+          Icon(icon, size: 16, color: context.colors.primary),
           const SizedBox(width: 6),
-          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.onSurfaceVariant)),
+          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: context.colors.onSurfaceVariant)),
         ],
       ),
     );

@@ -190,16 +190,16 @@ class _PriceMarker extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary : AppColors.surfaceLowest,
+          color: selected ? context.colors.primary : context.colors.surfaceLowest,
           borderRadius: BorderRadius.circular(99),
-          border: Border.all(color: AppColors.primary, width: 1.5),
+          border: Border.all(color: context.colors.primary, width: 1.5),
           boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.18), blurRadius: 6, offset: const Offset(0, 2))],
         ),
         child: FittedBox(
           fit: BoxFit.scaleDown,
           child: Text(
             more > 0 ? '$rent TND +$more' : '$rent TND',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: selected ? Colors.white : AppColors.primary),
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: selected ? Colors.white : context.colors.primary),
           ),
         ),
       ),
@@ -222,17 +222,17 @@ class _MapBanner extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: AppColors.surfaceLowest,
+            color: context.colors.surfaceLowest,
             borderRadius: BorderRadius.circular(99),
             boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 8, offset: const Offset(0, 2))],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 16, color: AppColors.primary),
+              Icon(icon, size: 16, color: context.colors.primary),
               const SizedBox(width: 8),
               Flexible(
-                child: Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.onSurfaceVariant)),
+                child: Text(text, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.colors.onSurfaceVariant)),
               ),
             ],
           ),
@@ -252,12 +252,12 @@ class _MapListingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final photo = listing.photos.isNotEmpty ? listing.photos.first.image : null;
     final placeholder = Container(
-      color: AppColors.surfaceLow,
-      child: const Icon(Icons.home, size: 32, color: AppColors.outline),
+      color: context.colors.surfaceLow,
+      child: Icon(Icons.home, size: 32, color: context.colors.outline),
     );
 
     return Material(
-      color: AppColors.surfaceLowest,
+      color: context.colors.surfaceLowest,
       elevation: 6,
       shadowColor: Colors.black.withValues(alpha: 0.3),
       borderRadius: BorderRadius.circular(20),
@@ -286,21 +286,21 @@ class _MapListingCard extends StatelessWidget {
                   children: [
                     Text(
                       listing.title,
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.onSurface),
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: context.colors.onSurface),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(Icons.location_on_outlined, size: 14, color: AppColors.outline),
+                        Icon(Icons.location_on_outlined, size: 14, color: context.colors.outline),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             listing.distanceKm == null
                                 ? listing.cityName
                                 : '${listing.cityName} · ${listing.distanceKm!.toStringAsFixed(1)} km',
-                            style: const TextStyle(fontSize: 12, color: AppColors.outline),
+                            style: TextStyle(fontSize: 12, color: context.colors.outline),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -311,8 +311,8 @@ class _MapListingCard extends StatelessWidget {
                     RichText(
                       text: TextSpan(
                         children: [
-                          TextSpan(text: '${listing.rent} TND', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.primary)),
-                          const TextSpan(text: ' / month', style: TextStyle(fontSize: 12, color: AppColors.outline)),
+                          TextSpan(text: '${listing.rent} TND', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: context.colors.primary)),
+                          TextSpan(text: ' / month', style: TextStyle(fontSize: 12, color: context.colors.outline)),
                         ],
                       ),
                     ),
@@ -322,11 +322,11 @@ class _MapListingCard extends StatelessWidget {
               Column(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.close, size: 18, color: AppColors.outline),
+                    icon: Icon(Icons.close, size: 18, color: context.colors.outline),
                     visualDensity: VisualDensity.compact,
                     onPressed: onClose,
                   ),
-                  const Icon(Icons.chevron_right, color: AppColors.primary),
+                  Icon(Icons.chevron_right, color: context.colors.primary),
                 ],
               ),
             ],
@@ -368,13 +368,13 @@ class _MapListingPagerState extends State<_MapListingPager> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: AppColors.surfaceLowest,
+            color: context.colors.surfaceLowest,
             borderRadius: BorderRadius.circular(99),
             boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 8, offset: const Offset(0, 2))],
           ),
           child: Text(
             '$count places at this spot · ${_page + 1}/$count',
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.onSurfaceVariant),
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: context.colors.onSurfaceVariant),
           ),
         ),
         SizedBox(
