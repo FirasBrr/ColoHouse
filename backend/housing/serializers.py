@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 
 from accounts.models import City, RoomType
@@ -118,14 +119,22 @@ class HousingRequestSerializer(serializers.ModelSerializer):
     sender = PublicUserSerializer(read_only=True)
     owner = PublicUserSerializer(source='listing.owner', read_only=True)
     contact = serializers.SerializerMethodField()
+    conversation_id = serializers.SerializerMethodField()
 
     class Meta:
         model = HousingRequest
         fields = [
             'id', 'listing', 'sender', 'owner', 'message', 'status',
-            'contact', 'created_at', 'updated_at',
+            'contact', 'conversation_id', 'created_at', 'updated_at',
         ]
         read_only_fields = ['status', 'created_at', 'updated_at']
+
+    def get_conversation_id(self, housing_request):
+        """The chat opened when the request was accepted (null before)."""
+        try:
+            return housing_request.conversation.pk
+        except ObjectDoesNotExist:
+            return None
 
     def get_contact(self, housing_request):
         """Address and phones are only shared once the request is accepted."""

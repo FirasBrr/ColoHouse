@@ -41,6 +41,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'accounts',
     'housing',
+    'notifications',
+    'chat',
+    'matching',
     'corsheaders',
 ]
 

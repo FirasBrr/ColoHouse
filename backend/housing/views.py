@@ -6,6 +6,11 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 
+from chat.firestore import try_sync_conversation
+from chat.models import Conversation
+from notifications.models import NotificationType
+from notifications.services import notify
+from notifications.texts import display_name
 from .models import HousingListing, HousingRequest, ListingPhoto, ListingStatus, RequestStatus
 from .permissions import IsOwnerOrReadOnly
 from .search import search_listings
@@ -25,7 +30,7 @@ def listing_queryset():
 
 def request_queryset():
     return HousingRequest.objects.select_related(
-        'listing__owner', 'listing__city', 'sender'
+        'listing__owner', 'listing__city', 'sender', 'conversation'
     ).prefetch_related('listing__photos')
 
 
@@ -123,7 +128,14 @@ class SendRequestView(generics.CreateAPIView):
         open_statuses = [RequestStatus.PENDING, RequestStatus.ACCEPTED]
         if listing.requests.filter(sender=user, status__in=open_statuses).exists():
             raise ValidationError({'non_field_errors': ['You already have an open request for this listing.']})
-        serializer.save(listing=listing, sender=user)
+        housing_request = serializer.save(listing=listing, sender=user)
+        notify(
+            listing.owner,
+            NotificationType.HOUSING_REQUEST,
+            data={'screen': 'received_requests', 'request_id': housing_request.pk},
+            sender=display_name(user, listing.owner.language),
+            listing=listing.title,
+        )
 
 
 class SentRequestsView(generics.ListAPIView):
@@ -180,9 +192,21 @@ class AcceptRequestView(RequestActionView):
         return HousingRequest.objects.filter(listing__owner=self.request.user)
 
     def apply(self, housing_request):
-        if housing_request.listing.status != ListingStatus.ACTIVE:
+        listing = housing_request.listing
+        if listing.status != ListingStatus.ACTIVE:
             raise ValidationError({'non_field_errors': ['You can only accept requests on an active listing.']})
         housing_request.accept()
+        # Accepting opens the chat: the Firestore document is created once the transaction is committed
+        conversation, _ = Conversation.objects.get_or_create(request=housing_request)
+        transaction.on_commit(lambda: try_sync_conversation(conversation))
+        sender = housing_request.sender
+        notify(
+            sender,
+            NotificationType.REQUEST_ACCEPTED,
+            data={'screen': 'conversation', 'request_id': housing_request.pk, 'conversation_id': conversation.pk},
+            owner=display_name(listing.owner, sender.language),
+            listing=listing.title,
+        )
 
 
 class DeclineRequestView(RequestActionView):
@@ -191,6 +215,15 @@ class DeclineRequestView(RequestActionView):
 
     def apply(self, housing_request):
         housing_request.decline()
+        listing = housing_request.listing
+        sender = housing_request.sender
+        notify(
+            sender,
+            NotificationType.REQUEST_DECLINED,
+            data={'screen': 'sent_requests', 'request_id': housing_request.pk},
+            owner=display_name(listing.owner, sender.language),
+            listing=listing.title,
+        )
 
 
 class CancelRequestView(RequestActionView):

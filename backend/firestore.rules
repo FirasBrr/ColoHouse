@@ -1,0 +1,41 @@
+rules_version = '2';
+
+// ColoHouse chat. Deploy: Firebase console > Firestore Database > Rules > paste this file > Publish.
+// conversations/{id} is written only by the Django backend (the Admin SDK ignores these rules);
+// the app reads it and writes / reads messages under it.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isParticipant(conversationId) {
+      return request.auth != null
+        && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+    }
+
+    match /conversations/{conversationId} {
+      allow read: if request.auth != null && request.auth.uid in resource.data.participants;
+      allow write: if false;
+
+      match /messages/{messageId} {
+        allow read: if isParticipant(conversationId);
+
+        // A message: { sender_uid: <my uid>, text: 1..2000 chars, sent_at: serverTimestamp(), read: false }
+        allow create: if isParticipant(conversationId)
+          && request.resource.data.keys().hasOnly(['sender_uid', 'text', 'sent_at', 'read'])
+          && request.resource.data.sender_uid == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 2000
+          && request.resource.data.sent_at == request.time
+          && request.resource.data.read == false;
+
+        // Only the receiver can mark a message as read; nothing else can change
+        allow update: if isParticipant(conversationId)
+          && resource.data.sender_uid != request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])
+          && request.resource.data.read == true;
+
+        allow delete: if false;
+      }
+    }
+  }
+}
