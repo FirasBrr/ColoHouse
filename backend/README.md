@@ -20,6 +20,14 @@ Django + Django REST Framework + JWT (SimpleJWT) + PostgreSQL, with Firebase (Fi
 - Housing requests: send, cancel, accept, decline (accept/decline run in a DB transaction with a row lock)
 - Privacy: the exact address and the phone numbers are only visible after a request is accepted
 
+**Sprint 3: notifications, chat, matching (backend)**
+- Push notifications (Firebase Cloud Messaging) + notification history with unread counter:
+  new request (to the host), request accepted / declined (to the sender), new chat message
+- Texts in the user's language (`language`: `en`, `fr`, `ar`)
+- Chat: a conversation is opened when a request is accepted; messages are written by the app in Cloud Firestore
+  (real time), protected by `firestore.rules`
+- Roommate matching: hard filters, score 0–100 with a breakdown per criterion and a short explanation
+
 Everything is also manageable in the Django admin (`/admin`): verify users, approve / hide listings.
 
 ## Project structure
@@ -28,9 +36,13 @@ Everything is also manageable in the Django admin (`/admin`): verify users, appr
 backend/
 ├── manage.py
 ├── requirements.txt
+├── firestore.rules   # Firestore security rules for the chat (publish them in the Firebase console)
 ├── Colohouse/        # the Django project (settings.py, urls.py)
-├── accounts/         # User, City, RoommateProfile + serializers, views, urls, tests
-└── housing/          # HousingListing, ListingPhoto, HousingRequest + search.py, views, urls, tests
+├── accounts/         # User, City, RoommateProfile, Firebase login (firebase.py) + serializers, views, urls, tests
+├── housing/          # HousingListing, ListingPhoto, HousingRequest + search.py, views, urls, tests
+├── notifications/    # Notification + services.py (history + push), texts.py (en/fr/ar)
+├── chat/             # Conversation + firestore.py (Firestore documents)
+└── matching/         # MatchResult + engine.py (filters, score, explanation)
 ```
 
 ## Run the backend on your PC
@@ -67,7 +79,12 @@ python manage.py runserver
 
 **After every `git pull`:** run `pip install -r requirements.txt` and `python manage.py migrate` again.
 
-Run the tests with `python manage.py test` (accounts + housing).
+**5. Firestore rules (once, and again when `firestore.rules` changes)**
+
+Firebase console → Firestore Database → **Rules** → paste the content of `backend/firestore.rules` → **Publish**.
+Without them the app cannot read or write the chat (the database is in production mode: everything is closed).
+
+Run the tests with `python manage.py test` (accounts, housing, notifications, chat, matching).
 
 ## Base URL for the Flutter app
 
@@ -116,6 +133,32 @@ Errors that are not about one field come as `{ "non_field_errors": ["..."] }`.
 | POST 🔒 | `/api/requests/<id>/accept/` | Accept (listing owner) |
 | POST 🔒 | `/api/requests/<id>/decline/` | Decline (listing owner) |
 | POST 🔒 | `/api/requests/<id>/cancel/` | Cancel (sender) |
+
+### Notifications
+
+| Method | URL | What it does |
+|---|---|---|
+| POST 🔒 | `/api/notifications/device/` | This phone receives my pushes (`{ "fcm_token": "..." }`) |
+| DELETE 🔒 | `/api/notifications/device/` | Stop pushes to my phone (on log out) |
+| GET 🔒 | `/api/notifications/` | My notification history (newest first, last 100; `?unread=true`) |
+| GET 🔒 | `/api/notifications/unread-count/` | `{ "unread": 3 }` for the badge |
+| POST 🔒 | `/api/notifications/<id>/read/` | Mark one as read |
+| POST 🔒 | `/api/notifications/read-all/` | Mark all as read |
+
+### Chat
+
+| Method | URL | What it does |
+|---|---|---|
+| GET 🔒 | `/api/conversations/` | My chats (most recent message first) |
+| GET 🔒 | `/api/conversations/<id>/` | Open a chat (prepares the Firestore document) |
+| POST 🔒 | `/api/conversations/<id>/message-sent/` | Tell the server I wrote a message in Firestore (`{ "message_id": "..." }`) |
+
+### Roommate matching
+
+| Method | URL | What it does |
+|---|---|---|
+| GET 🔒 | `/api/matches/` | Compatible roommates, best first (`?limit=20`, `?min_score=60`) |
+| GET 🔒 | `/api/matches/<user_id>/` | Compatibility with one person (even if not compatible) |
 
 ---
 
@@ -194,6 +237,7 @@ When any 🔒 call returns `401` during a session, call refresh, save the new `a
   "push_enabled": true,
   "notify_requests": true,
   "notify_messages": true,
+  "language": "en",
   "date_joined": "2026-10-14T15:49:13Z"
 }
 ```
@@ -209,6 +253,8 @@ Empty values come back as `""` (text) or `null` (`profile_picture`, `city`).
 - `phone`: digits only, optional `+` at the start, 8–15 digits.
 - `email` and `is_verified` cannot be changed.
 - Notification settings use the same endpoint: `{ "push_enabled": false, "notify_requests": true, "notify_messages": false }`
+- Language: `{ "language": "fr" }` (`en`, `fr` or `ar`). Send it **after every login** and whenever the app language changes:
+  push notifications and match explanations are written in this language.
 - Returns `200` with the full updated profile.
 
 ### Upload a profile picture 🔒
@@ -371,11 +417,13 @@ Paused / closed listings disappear from the search, and their details are only v
   "message": "Hello, is the room still free?",
   "status": "pending",
   "contact": null,
+  "conversation_id": null,
   "created_at": "2026-11-08T16:00:00Z",
   "updated_at": "2026-11-08T16:00:00Z"
 }
 ```
 - `status`: `pending`, `accepted`, `declined`, `cancelled`, `completed`.
+- `conversation_id`: the chat opened when the request was accepted (`null` before) → `GET /api/conversations/<id>/`.
 - `contact` is `null` until the request is **accepted**, then:
   `{ "address": "5 Liberty avenue", "latitude": 36.8102, "longitude": 10.1803, "owner_phone": "+216...", "sender_phone": "+216..." }`
 
@@ -392,6 +440,173 @@ Paused / closed listings disappear from the search, and their details are only v
 - Only `pending` requests can be accepted / declined / cancelled, otherwise `400` `{ "non_field_errors": ["This request is already accepted."] }`.
 - Accept only works while the listing is `active`.
 - After a cancel or a decline, the student can send a new request.
+- Sending a request notifies the host; accepting or declining notifies the sender (next section). Accepting also opens the chat.
+
+---
+
+## Notifications in detail
+
+### Register the phone for pushes 🔒
+After login (and each time `FirebaseMessaging.instance.onTokenRefresh` fires):
+1. `await FirebaseMessaging.instance.requestPermission();` (Android 13+ shows nothing without it;
+   also add `<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>` to the main AndroidManifest).
+2. `POST /api/notifications/device/` with `{ "fcm_token": "<await FirebaseMessaging.instance.getToken()>" }` → `200`.
+- One phone = one account: if another account was logged in on this phone before, it stops receiving its pushes.
+- On log out: `DELETE /api/notifications/device/` with `{ "fcm_token": "<this phone's token>" }` → `204`
+  (only this phone stops; the user's other phone keeps its pushes), then `await FirebaseMessaging.instance.deleteToken();`
+  even if the call failed (offline), then delete the saved tokens.
+
+### When a push is sent
+
+| Event | Who gets it | `type` | `data` (to open the right screen) |
+|---|---|---|---|
+| New housing request | listing owner | `housing_request` | `screen: "received_requests"`, `request_id` |
+| Request accepted | sender | `request_accepted` | `screen: "conversation"`, `request_id`, `conversation_id` |
+| Request declined | sender | `request_declined` | `screen: "sent_requests"`, `request_id` |
+| New chat message | the other person | `new_message` | `screen: "conversation"`, `conversation_id` |
+
+- Texts are in the receiver's `language` (e.g. "Nouvelle demande de logement").
+- A push is only sent when `push_enabled` is on and `notify_requests` (requests) / `notify_messages` (messages) is on.
+  The notification is always saved in the history.
+- Every push carries `data.type`, `data.screen`, the ids above and `data.notification_id` (all values are strings).
+  On tap (`FirebaseMessaging.onMessageOpenedApp` / `getInitialMessage()`), read `data.screen` and navigate;
+  you can also call `POST /api/notifications/<notification_id>/read/`.
+- Android: create a notification channel with id **`colohouse_default`** (e.g. with `flutter_local_notifications`),
+  and show foreground messages yourself (`FirebaseMessaging.onMessage`): Android does not display them while the app is open.
+  Pass `jsonEncode(message.data)` as the local notification `payload`, and in `onDidReceiveNotificationResponse`
+  decode it and navigate with the same `data.screen` logic as a background tap.
+  Skip the local notification when `data.conversation_id` is the chat currently open.
+- Several messages of the same chat are merged into one unread notification (same Android `tag`).
+  Opening that chat (`GET /api/conversations/<id>/`) marks them as read.
+
+### Notification history 🔒
+`GET /api/notifications/` → `200`
+```json
+[
+  {
+    "id": 7,
+    "type": "request_accepted",
+    "title": "Request accepted",
+    "body": "Host accepted your request for \"Studio in Tunis\". You can now chat.",
+    "data": { "screen": "conversation", "request_id": 12, "conversation_id": 3 },
+    "is_read": false,
+    "created_at": "2026-11-25T18:00:00Z"
+  }
+]
+```
+(In this list, `data` keeps real numbers; only the push data is converted to strings.)
+
+---
+
+## Chat in detail
+
+The messages are stored in **Cloud Firestore** so the app gets them in real time; Django only opens the chat,
+lists the conversations and sends the "new message" notification.
+
+```
+Firestore
+conversations/{firestore id}                 ← written by Django only (a random UUID, see firestore_path)
+    participants: [<firebase uid>, <firebase uid>]   (active accounts only)
+    participant_ids: [<user id>, <user id>]
+    request_id, listing_id, listing_title, created_at
+conversations/{firestore id}/messages/{auto id}      ← written by the app
+    sender_uid: <my firebase uid>
+    text: "Hello"              (1–2000 characters)
+    sent_at: serverTimestamp()
+    read: false                (only the receiver can set it to true)
+```
+
+The chat needs a **Firebase login** (the rules check `request.auth.uid`), so log in with `/api/auth/firebase/`.
+
+**1. List my chats:** `GET /api/conversations/` → `200`
+```json
+[
+  {
+    "id": 3,
+    "request_id": 12,
+    "listing": { "id": 3, "title": "Studio in Tunis", "rent": 550, "room_type": "studio", "city": "Tunis", "status": "active", "photo": "http://..." },
+    "other_user": { "id": 2, "first_name": "Host", "last_name": "Test", "profile_picture": null, "bio": "", "institution": "", "occupation": "", "is_verified": true },
+    "last_message": "Is the room still free?",
+    "last_message_at": "2026-11-25T18:00:00Z",
+    "last_sender_id": 5,
+    "firestore_path": "conversations/51fa588d-6c1e-4d3b-9a0f-2b7c1e9d4f10",
+    "created_at": "2026-11-25T17:55:00Z"
+  }
+]
+```
+Use `id` for the API calls and `firestore_path` for Firestore (never build the Firestore path from `id`).
+
+**2. Open a chat:** `GET /api/conversations/<id>/` (same object) → then listen to Firestore:
+`FirebaseFirestore.instance.collection('${chat.firestorePath}/messages').orderBy('sent_at').snapshots()`.
+- `400` if I am not logged in with Firebase, `404` if it is not my chat, `503` if Firestore is down (after ~10 s at most).
+- Opening the chat also marks its "new message" notifications as read.
+- Your own message has `sent_at == null` until the server sets the time: show it at the bottom meanwhile.
+
+**3. Send a message:** add it in Firestore, then tell the server:
+```dart
+final ref = await FirebaseFirestore.instance.collection('${chat.firestorePath}/messages').add({
+  'sender_uid': FirebaseAuth.instance.currentUser!.uid,
+  'text': text,
+  'sent_at': FieldValue.serverTimestamp(),
+  'read': false,
+});
+await dio.post('/conversations/${chat.id}/message-sent/', data: {'message_id': ref.id});
+```
+The server reads the message in Firestore (it cannot be faked), updates `last_message` and notifies the other person.
+- `{"notified": false}` when the message was already handled or is older than the last one (safe to retry).
+- `403` if the message was not sent by me; `400` if it does not exist.
+
+**4. Mark as read:** when the receiver sees a message: `update({'read': true})` on its document.
+
+---
+
+## Roommate matching in detail
+
+**How the score works**
+1. **Hard filters** (people who fail one are not in the list): looking for a room, smoking OK in both directions
+   (`smoker` vs `accepts_smokers`), budgets at most 30 % apart, move-in dates at most 60 days apart.
+2. **Score from 0 to 100**:
+
+| Criterion | Points | Full points when |
+|---|---|---|
+| `budget` | 25 | same budget (0 at 30 % apart) |
+| `sleep_schedule` | 20 | same schedule (half for early/normal or normal/late) |
+| `cleanliness` | 20 | same level (1–5) |
+| `noise_tolerance` | 15 | same level (1–5) |
+| `smoking` | 10 | both smoke or both don't (half otherwise) |
+| `distance` | 10 | same city (0 at twice my `max_distance_to_center`, default 10 km) |
+
+A missing value (preference not filled) counts as half the points.
+
+**List:** `GET /api/matches/` → `200`, best score first (default 20, `?limit=` up to 50, `?min_score=`)
+```json
+[
+  {
+    "user": { "id": 8, "first_name": "Sami", "last_name": "Test", "profile_picture": null, "bio": "", "institution": "", "occupation": "", "is_verified": false },
+    "city": "Tunis",
+    "score": 86,
+    "breakdown": {
+      "budget": { "points": 20.8, "max": 25, "known": true, "you": 500, "them": 475 },
+      "sleep_schedule": { "points": 20.0, "max": 20, "known": true, "you": "late", "them": "late" },
+      "cleanliness": { "points": 15.0, "max": 20, "known": true, "you": 4, "them": 3 },
+      "noise_tolerance": { "points": 15.0, "max": 15, "known": true, "you": 2, "them": 2 },
+      "smoking": { "points": 10.0, "max": 10, "known": true, "you": false, "them": false },
+      "distance": { "points": 5.0, "max": 10, "known": false, "km": null }
+    },
+    "explanation": "Good match on budget, sleep schedule, cleanliness.",
+    "computed_at": "2026-11-25T18:00:00Z"
+  }
+]
+```
+- Show `score` as a gauge and `breakdown` as bars (`points` / `max`); `known: false` = not filled by one of you.
+- `explanation` is in my `language`.
+
+**One person:** `GET /api/matches/<user_id>/` → same fields plus `"compatible": true/false` and
+`"reasons": ["smoking", "budget", "move_in_date"]` (the failed hard filters).
+- Useful on a received request, to see if the sender would be a good roommate.
+- Only visible for people who appear in matching (`looking_for_room: true`) **or** who share a housing request with me
+  (in either direction). Anyone else → `404`, like myself or an unknown user (privacy).
+- Someone who never filled in their preferences still gets a result: every criterion is `known: false` (half points).
 
 ## How the app should use it
 
@@ -404,7 +619,14 @@ Paused / closed listings disappear from the search, and their details are only v
 6. **Post tab** → `POST /api/listings/`, then `POST /api/listings/<id>/photos/` for each picture.
 7. **Listing details** → "Send request" button unless `my_request` is pending/accepted; show address + phone when `contact_visible` is `true`.
 8. **My requests / requests received** → accept / decline / cancel buttons on `pending` requests.
-9. **Settings** → notification switches (`PATCH /me/`), log out (delete the tokens), delete account.
+9. **Settings** → notification switches and language (`PATCH /me/`), log out (`DELETE /notifications/device/` with
+   this phone's token, `FirebaseMessaging.instance.deleteToken()`, delete the tokens, `FirebaseAuth.instance.signOut()`),
+   delete account.
+10. **After login** → `PATCH /me/` with the current `language`, `requestPermission()`, then `POST /api/notifications/device/`
+    with the FCM token; handle taps with `data.screen`.
+11. **Bell icon** → badge from `/api/notifications/unread-count/`, list from `/api/notifications/`.
+12. **Chat tab** → `/api/conversations/`; open one → `/api/conversations/<id>/` + Firestore messages; after sending → `message-sent`.
+13. **Roommates** → `/api/matches/` (score + breakdown); on a received request → `/api/matches/<sender id>/`.
 
 ## Dart examples (`dio`)
 

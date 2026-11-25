@@ -72,12 +72,12 @@ Contact details stay private until a request is accepted.
 | US-19 | E5 | As a host, I want to accept or decline a request, safely even if two actions happen at the same time. | Must | 3 | S2 | Done |
 | US-20 | E5 | As a seeker, I want to see my sent requests and cancel one. | Should | 2 | S2 | Done |
 | US-21 | E5 | As a user, I want the exact address and phone number to stay hidden until a request is accepted. | Must | 2 | S2 | Done |
-| US-22 | E6 | As a person looking for a room, I want a ranked list of compatible roommates with a score from 0 to 100. | Must | 8 | S3 | To do |
-| US-23 | E6 | As a person looking for a room, I want to see the score breakdown and a short explanation of each match. | Should | 3 | S3 | To do |
-| US-24 | E7 | As a user, I want to chat in real time with the other person once a request is accepted. | Must | 8 | S3 | To do |
-| US-25 | E8 | As a host, I want a push notification when I receive a request; as a seeker, when my request is accepted or declined (app in foreground or background). | Must | 5 | S3 | To do |
-| US-26 | E8 | As a user, I want a tap on a notification to open the related screen. | Must | 2 | S3 | To do |
-| US-27 | E8 | As a user, I want a notification history with an unread counter. | Should | 3 | S3 | To do |
+| US-22 | E6 | As a person looking for a room, I want a ranked list of compatible roommates with a score from 0 to 100. | Must | 8 | S3 | In progress (backend done) |
+| US-23 | E6 | As a person looking for a room, I want to see the score breakdown and a short explanation of each match. | Should | 3 | S3 | In progress (backend done) |
+| US-24 | E7 | As a user, I want to chat in real time with the other person once a request is accepted. | Must | 8 | S3 | In progress (backend done) |
+| US-25 | E8 | As a host, I want a push notification when I receive a request; as a seeker, when my request is accepted or declined (app in foreground or background). | Must | 5 | S3 | In progress (backend done) |
+| US-26 | E8 | As a user, I want a tap on a notification to open the related screen. | Must | 2 | S3 | In progress (backend done) |
+| US-27 | E8 | As a user, I want a notification history with an unread counter. | Should | 3 | S3 | In progress (backend done) |
 | US-28 | E9 | As a user, I want to switch between light and dark theme and keep my choice when I reopen the app. | Must | 2 | S2 | Done |
 | US-29 | E9 | As a user, I want the app in French, English and Arabic (right-to-left), with a language switch inside the app. | Must | 8 | S4 | To do |
 | US-30 | E9 | As a user, I want clear navigation with a drawer, a bottom navigation bar and tabs. | Must | 2 | S4 | In progress (tabs done) |
@@ -108,7 +108,7 @@ Contact details stay private until a request is accepted.
 |---|---|---|---|---|---|
 | S1 Foundations | 1–2 | Sign up, log in and fill in the profile and preferences on the emulator | 20 | 20 | Done |
 | S2 Housing | 3–4 | A host publishes a listing, a seeker finds it on the map, sends a request, the host accepts | 37 | 37 | Done |
-| S3 Firebase & social | 5–6 | Firebase login, ranked roommates, chat after acceptance, push notifications | 37 | 0 (2 stories half done) | In progress |
+| S3 Firebase & social | 5–6 | Firebase login, ranked roommates, chat after acceptance, push notifications | 37 | 0 (backend of all 8 stories done, app to do) | In progress |
 | S4 Experience & release | 7–8 | Languages, ads, navigation and animations, admin, AI bonus, hardening, release APK | 35 | — | Planned |
 
 Fill in the calendar dates of each sprint. The delivery log in section 6 gives the real dates from the git history.
@@ -178,10 +178,10 @@ The 4 sprints, their themes and their demos are kept. These changes came from th
 
 - Backend (Django)
     - [x] Firebase login: the app sends its Firebase ID token to `POST /api/auth/firebase/`, the backend verifies it and returns its own JWT pair; existing accounts are linked only with a verified email (US-09, US-10).
-    - [ ] Push notifications: device token and language on the user; a notification when a request is received, accepted or declined, with the target screen in the data (US-25, US-26).
-    - [ ] Notification history: Notification model, list, unread counter, mark as read (US-27).
-    - [ ] Chat: when a request is accepted, the backend creates the conversation in Cloud Firestore; Firestore security rules allow only the two participants (US-24).
-    - [ ] Roommate matching: hard filters (looking for a room, smoker compatibility both ways, budget within ±20 %, move-in dates close, same area), weighted score (budget 25, sleep schedule 20, cleanliness 20, noise tolerance 15, smoking 10, distance 10), breakdown stored as JSON, template explanation (US-22, US-23).
+    - [x] Push notifications: device token and language on the user; a notification when a request is received, accepted or declined and for each new chat message, with the target screen in the data; sent only after the database transaction commits (US-25, US-26).
+    - [x] Notification history: Notification model, list, unread counter, mark as read; texts in English, French and Arabic (US-27).
+    - [x] Chat: accepting a request opens a conversation; the backend creates its Cloud Firestore document, and Firestore security rules allow only the two participants (tested with 21 cases in the Firebase emulator) (US-24).
+    - [x] Roommate matching: hard filters (looking for a room, smoking compatible both ways, budgets at most 30 % apart, move-in dates at most 60 days apart), weighted score (budget 25, sleep schedule 20, cleanliness 20, noise tolerance 15, smoking 10, distance 10), breakdown stored as JSON in MatchResult, template explanation in the user's language (US-22, US-23).
 - Frontend (Flutter)
     - [ ] Firebase setup (firebase_core, Gradle plugin); email/password sign-up with email verification; Google Sign-In button.
     - [ ] firebase_messaging: permission, foreground and background notifications, tap opens the related screen.
@@ -213,7 +213,7 @@ The 4 sprints, their themes and their demos are kept. These changes came from th
 
 | Date | Delivered |
 |---|---|
-| 2026-11-25 | Firebase login endpoint, account linking with verified email, security review fixes (not yet committed) |
+| 2026-11-25 | Sprint 3 backend: Firebase login, push notifications and history, Firestore chat with security rules, roommate matching (not yet committed) |
 | 2026-11-16 | Dark mode with saved choice |
 | 2026-11-13 | Listing filters and map view |
 | 2026-11-12 | Home screen and search tab |
@@ -226,10 +226,10 @@ The 4 sprints, their themes and their demos are kept. These changes came from th
 
 | Requirement | Backlog item | Status |
 |---|---|---|
-| Cloud Firestore | US-24 (chat), US-42 (bonus) | S3 |
+| Cloud Firestore | US-24 (chat), US-42 (bonus) | S3, backend + security rules done |
 | FirebaseAuth email/password + Google Sign-In | US-09, US-10 | S3, backend done |
 | Forms with validation | US-08 | Done (2 forms to complete in S4) |
-| Push notifications (foreground, background, tap opens a screen, triggered by an action) | US-25, US-26 | S3 |
+| Push notifications (foreground, background, tap opens a screen, triggered by an action) | US-25, US-26 | S3, backend done (pushes on request sent / accepted / declined and new message) |
 | French, English, Arabic with RTL | US-29 | S4 |
 | Light/dark theme saved | US-28 | Done |
 | Drawer, BottomNavigationBar, TabBar | US-30 | TabBar done, rest S4 |
