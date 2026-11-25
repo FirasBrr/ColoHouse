@@ -1,11 +1,12 @@
 # Colohouse Backend (Django REST API)
 
-Django + Django REST Framework + JWT (SimpleJWT) + PostgreSQL.
+Django + Django REST Framework + JWT (SimpleJWT) + PostgreSQL, with Firebase (FirebaseAuth login, FCM/Firestore later).
 
 ## What is done
 
 **Sprint 1: accounts**
 - Sign up, log in with JWT, refresh the token
+- Log in with **FirebaseAuth** (email/password or Google): the app sends its Firebase ID token, the backend answers with the same JWT tokens
 - Profile: name, phone, bio, profile picture, institution, occupation, city, verification badge (set by an admin)
 - Lifestyle & housing preferences: budget, room type, move-in date, max distance to the city center, sleep schedule, noise tolerance, cleanliness, smoking, "looking for a room"
 - Notification settings, delete account
@@ -50,7 +51,13 @@ PostgreSQL must be installed. Run this and enter your `postgres` password:
 ```
 (Or in pgAdmin: create role `colohouse` / password `colohouse` with "Create databases", then a database `colohouse` owned by it.)
 
-**3. Create the tables, add the cities and start the server**
+**3. Firebase key (once)**
+
+Firebase console → ⚙ Project settings → Service accounts → **Generate new private key**, and save the file as `backend/firebase-key.json`.
+It is in `.gitignore`: **never commit it or send it in a chat**, it gives admin access to the Firebase project.
+Without it everything works except `POST /api/auth/firebase/` (it answers `503`).
+
+**4. Create the tables, add the cities and start the server**
 ```powershell
 python manage.py migrate
 python manage.py seed_cities        # adds 12 cities (safe to run again)
@@ -83,6 +90,7 @@ Errors that are not about one field come as `{ "non_field_errors": ["..."] }`.
 |---|---|---|
 | POST | `/api/auth/register/` | Sign up |
 | POST | `/api/auth/login/` | Log in → tokens |
+| POST | `/api/auth/firebase/` | Log in with FirebaseAuth (email/password or Google) → tokens |
 | POST | `/api/auth/token/refresh/` | New access token |
 | GET 🔒 | `/api/auth/me/` | My profile |
 | PATCH 🔒 | `/api/auth/me/` | Edit my profile / upload picture / notification settings |
@@ -128,6 +136,37 @@ Errors that are not about one field come as `{ "non_field_errors": ["..."] }`.
 ```
 - `200` → `{ "access": "<token>", "refresh": "<token>" }`
 - `401` → `{ "detail": "No active account found with the given credentials" }`
+
+### Log in with FirebaseAuth (email/password or Google)
+The app signs the user in with `firebase_auth` (`signInWithEmailAndPassword`, `createUserWithEmailAndPassword` or Google Sign-In),
+gets the Firebase ID token, and exchanges it for our tokens:
+
+`POST /api/auth/firebase/`
+```json
+{ "id_token": "<await FirebaseAuth.instance.currentUser!.getIdToken()>", "first_name": "Student", "last_name": "Test" }
+```
+- `first_name` / `last_name` are optional and only used when the account is created (send them after an email/password sign-up; Google already gives the name).
+- `201` → new account: `{ "access": "<token>", "refresh": "<token>", "created": true }` → show the profile setup screens.
+- `200` → existing account: same body with `"created": false` → go to home.
+- From here everything is the same as the normal login: save `access` / `refresh`, use `/api/auth/token/refresh/`, etc.
+- `400` → `{ "non_field_errors": ["Verify your email address (check your inbox), then log in again."] }`:
+  the Firebase email is not verified yet (see the email/password flow below). Google accounts are always verified.
+- `401` → `{ "detail": "Invalid or expired Firebase token. Log in again." }` (or `"This account is disabled."`)
+- `503` → Firebase is not configured on the server (missing or wrong `backend/firebase-key.json`).
+
+**Email/password sign-up flow** (the backend only accepts verified emails):
+1. `createUserWithEmailAndPassword(email, password)` then `await credential.user!.sendEmailVerification()`.
+2. Show a "check your inbox" screen with an "I verified my email" button.
+3. On that button: `await FirebaseAuth.instance.currentUser!.reload();` then
+   `final idToken = await FirebaseAuth.instance.currentUser!.getIdToken(true);` (`true` forces a fresh token,
+   the cached one still says "not verified" for up to 1 hour), then `POST /api/auth/firebase/` with the names.
+4. Next logins: `signInWithEmailAndPassword` → `getIdToken()` → `POST /api/auth/firebase/` (no names needed).
+
+How accounts are matched: same Firebase account → same user. The first time, an existing user with the same (verified) email
+is linked to the Firebase account and **its old Django password is removed** (it was never verified, so whoever registered
+that email first must not keep access); its old tokens stop working too. Otherwise a new user is created.
+Users from Firebase have no Django password, so they always log in through Firebase (`/auth/login/` answers `401` for them).
+An admin can unlink a user (Django admin → Users → "Firebase" → empty the field), e.g. if the Firebase user was deleted and created again.
 
 ### Refresh the access token
 `POST /api/auth/token/refresh/` with `{ "refresh": "<refresh token>" }`
@@ -356,9 +395,10 @@ Paused / closed listings disappear from the search, and their details are only v
 
 ## How the app should use it
 
-1. **Sign up** → on `201`, call login with the same email/password.
-2. **Log in** → save `access` and `refresh` (`flutter_secure_storage`).
-3. **After the first login** → profile setup: `PATCH /me/` (city dropdown from `/api/cities/`), picture, then lifestyle (`PATCH /me/preferences/`).
+1. **Sign up / log in with FirebaseAuth** (email/password or Google) → `POST /api/auth/firebase/` with the Firebase ID token.
+   (The old `/auth/register/` + `/auth/login/` still work too.)
+2. **Save** `access` and `refresh` (`flutter_secure_storage`). On log out, also call `FirebaseAuth.instance.signOut()`.
+3. **First login** (`"created": true`) → profile setup: `PATCH /me/` (city dropdown from `/api/cities/`), picture, then lifestyle (`PATCH /me/preferences/`).
 4. **Any 🔒 call returns `401`** → call `/api/auth/token/refresh/`, save the new `access`, retry; if refresh fails → login screen.
 5. **Search tab** → `GET /api/listings/` with the filters; the map uses `latitude`/`longitude` of each result.
 6. **Post tab** → `POST /api/listings/`, then `POST /api/listings/<id>/photos/` for each picture.
@@ -370,7 +410,24 @@ Paused / closed listings disappear from the search, and their details are only v
 
 ```dart
 final dio = Dio(BaseOptions(baseUrl: 'http://10.0.2.2:8000/api'));
-dio.options.headers['Authorization'] = 'Bearer $access';
+
+// FirebaseAuth login with Google -> our tokens (google_sign_in 7.x + firebase_auth)
+// Once at startup (serverClientId = the "web" OAuth client, client_type 3 in google-services.json):
+await GoogleSignIn.instance.initialize(
+  serverClientId: '647651381595-mjrfh82hqbt0sbp7urh9jefu6gghf6b4.apps.googleusercontent.com',
+);
+// On the "Continue with Google" button:
+final account = await GoogleSignIn.instance.authenticate();
+final cred = await FirebaseAuth.instance.signInWithCredential(
+  GoogleAuthProvider.credential(idToken: account.authentication.idToken),
+);
+final idToken = await cred.user!.getIdToken();
+final tokens = await dio.post('/auth/firebase/', data: {'id_token': idToken});
+// tokens.data = {"access": "...", "refresh": "...", "created": true/false}
+// Needs: firebase_core + Firebase.initializeApp(), the google-services Gradle plugin,
+// and the PC's debug SHA-1 added in Firebase console → Project settings → Your apps.
+
+dio.options.headers['Authorization'] = 'Bearer ${tokens.data['access']}';
 
 // Search
 final res = await dio.get('/listings/', queryParameters: {
