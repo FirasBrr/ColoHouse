@@ -153,7 +153,12 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    # Tokens carry a hash of the password: when it changes (e.g. account linked to Firebase), old tokens stop working
+    'CHECK_REVOKE_TOKEN': True,
 }
+
+# Firebase Admin SDK service account key (never commit this file, it is in .gitignore)
+FIREBASE_KEY_PATH = BASE_DIR / 'firebase-key.json'
 
 # --- CORS (development only) ---
 CORS_ALLOW_ALL_ORIGINS = True

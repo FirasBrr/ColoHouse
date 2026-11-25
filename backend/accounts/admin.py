@@ -29,6 +29,11 @@ class CustomUserAdmin(UserAdmin):
         ('Notifications', {
             'fields': ('push_enabled', 'notify_requests', 'notify_messages')
         }),
+        ('Firebase', {
+            'fields': ('firebase_uid',),
+            'description': 'Firebase account linked to this user. Empty it to unlink '
+                           '(e.g. the Firebase user was deleted and created again).'
+        }),
         ('Permissions', {
             'fields': ('is_active', 'is_staff', 'is_superuser',
                        'groups', 'user_permissions')

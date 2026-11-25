@@ -66,6 +66,9 @@ class User(AbstractUser):
     notify_requests = models.BooleanField(default=True)
     notify_messages = models.BooleanField(default=True)
 
+    # Firebase account linked to this user (set on the first Firebase login)
+    firebase_uid = models.CharField(max_length=128, unique=True, null=True, blank=True)
+
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
 

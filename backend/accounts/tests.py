@@ -1,12 +1,15 @@
 import io
 import shutil
 import tempfile
+from unittest.mock import patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from firebase_admin import auth as firebase_auth
 from PIL import Image
 from rest_framework.test import APIClient
+from .firebase import FirebaseUnavailable
 from .models import City, RoommateProfile, User
 
 TEMP_MEDIA = tempfile.mkdtemp()
@@ -249,6 +252,219 @@ class PreferencesTests(TestCase):
     def test_preferences_require_token(self):
         response = APIClient().get(reverse('accounts:preferences'))
         self.assertEqual(response.status_code, 401)
+
+
+def google_claims(**extra):
+    claims = {
+        'uid': 'firebase-uid-1',
+        'email': 'student@colohouse.com',
+        'email_verified': True,
+        'name': 'Student Test Account',
+        'firebase': {'sign_in_provider': 'google.com'},
+    }
+    claims.update(extra)
+    return claims
+
+
+@patch('accounts.serializers.verify_id_token')
+class FirebaseLoginTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.url = reverse('accounts:firebase_login')
+
+    def login(self, **data):
+        return self.client.post(self.url, {'id_token': 'firebase-token', **data}, format='json')
+
+    def test_new_google_user_is_created(self, verify):
+        verify.return_value = google_claims()
+        response = self.login()
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(response.data['created'])
+        user = User.objects.get(firebase_uid='firebase-uid-1')
+        self.assertEqual(user.email, 'student@colohouse.com')
+        self.assertEqual(user.first_name, 'Student')
+        self.assertEqual(user.last_name, 'Test Account')
+        self.assertFalse(user.has_usable_password())
+        verify.assert_called_once_with('firebase-token')
+
+    def test_returned_tokens_work_on_the_api(self, verify):
+        verify.return_value = google_claims()
+        access = self.login().data['access']
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + access)
+        response = self.client.get(reverse('accounts:me'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['email'], 'student@colohouse.com')
+
+    def test_refresh_token_works(self, verify):
+        verify.return_value = google_claims()
+        refresh = self.login().data['refresh']
+        response = self.client.post(reverse('accounts:token_refresh'), {'refresh': refresh})
+        self.assertEqual(response.status_code, 200)
+
+    def test_names_sent_by_the_app_are_used(self, verify):
+        verify.return_value = google_claims(name=None, firebase={'sign_in_provider': 'password'})
+        response = self.login(first_name='Student', last_name='Test')
+        self.assertEqual(response.status_code, 201)
+        user = User.objects.get()
+        self.assertEqual((user.first_name, user.last_name), ('Student', 'Test'))
+
+    def test_new_account_requires_verified_email(self, verify):
+        verify.return_value = google_claims(email_verified=False, firebase={'sign_in_provider': 'password'})
+        response = self.login(first_name='Student', last_name='Test')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('non_field_errors', response.data)
+        self.assertEqual(User.objects.count(), 0)
+
+    def test_returning_user_is_not_duplicated(self, verify):
+        verify.return_value = google_claims()
+        self.login()
+        response = self.login()
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.data['created'])
+        self.assertEqual(User.objects.count(), 1)
+
+    def test_returning_user_found_by_uid_even_if_email_changed(self, verify):
+        verify.return_value = google_claims()
+        self.login()
+        verify.return_value = google_claims(email='new@colohouse.com')
+        response = self.login()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(User.objects.count(), 1)
+
+    def test_existing_account_is_linked_when_email_verified(self, verify):
+        user = User.objects.create_user('student@colohouse.com', 'StrongPass123!', first_name='Student', last_name='Test')
+        verify.return_value = google_claims(email='Student@ColoHouse.com')
+        response = self.login()
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.data['created'])
+        user.refresh_from_db()
+        self.assertEqual(user.firebase_uid, 'firebase-uid-1')
+        self.assertEqual(User.objects.count(), 1)
+
+    def test_linking_removes_the_old_password(self, verify):
+        User.objects.create_user('student@colohouse.com', 'StrongPass123!', first_name='Student', last_name='Test')
+        verify.return_value = google_claims()
+        self.login()
+        user = User.objects.get()
+        self.assertFalse(user.has_usable_password())
+        response = self.client.post(
+            reverse('accounts:login'), {'email': 'student@colohouse.com', 'password': 'StrongPass123!'}
+        )
+        self.assertEqual(response.status_code, 401)
+
+    def test_linking_revokes_tokens_issued_with_the_old_password(self, verify):
+        User.objects.create_user('student@colohouse.com', 'StrongPass123!', first_name='Student', last_name='Test')
+        old = self.client.post(
+            reverse('accounts:login'), {'email': 'student@colohouse.com', 'password': 'StrongPass123!'}
+        ).data
+        verify.return_value = google_claims()
+        self.login()
+
+        other = APIClient()
+        other.credentials(HTTP_AUTHORIZATION='Bearer ' + old['access'])
+        self.assertEqual(other.get(reverse('accounts:me')).status_code, 401)
+        refreshed = other.post(reverse('accounts:token_refresh'), {'refresh': old['refresh']})
+        if refreshed.status_code == 200:
+            other.credentials(HTTP_AUTHORIZATION='Bearer ' + refreshed.data['access'])
+            self.assertEqual(other.get(reverse('accounts:me')).status_code, 401)
+
+    def test_existing_account_not_linked_when_email_not_verified(self, verify):
+        user = User.objects.create_user('student@colohouse.com', 'StrongPass123!', first_name='Student', last_name='Test')
+        verify.return_value = google_claims(email_verified=False)
+        response = self.login()
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('non_field_errors', response.data)
+        user.refresh_from_db()
+        self.assertIsNone(user.firebase_uid)
+
+    def test_email_linked_to_another_firebase_account_is_rejected(self, verify):
+        User.objects.create_user('student@colohouse.com', 'StrongPass123!', firebase_uid='other-uid')
+        verify.return_value = google_claims()
+        response = self.login()
+        self.assertEqual(response.status_code, 400)
+
+    def test_invalid_token_is_rejected(self, verify):
+        verify.side_effect = firebase_auth.InvalidIdTokenError('bad token')
+        response = self.login()
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(User.objects.count(), 0)
+
+    def test_expired_token_is_rejected(self, verify):
+        verify.side_effect = firebase_auth.ExpiredIdTokenError('expired', cause=None)
+        self.assertEqual(self.login().status_code, 401)
+
+    def test_disabled_user_is_rejected(self, verify):
+        User.objects.create_user('student@colohouse.com', 'StrongPass123!', firebase_uid='firebase-uid-1', is_active=False)
+        verify.return_value = google_claims()
+        self.assertEqual(self.login().status_code, 401)
+
+    def test_account_without_email_is_rejected(self, verify):
+        verify.return_value = google_claims(email=None)
+        self.assertEqual(self.login().status_code, 400)
+
+    def test_missing_token_is_rejected(self, verify):
+        response = self.client.post(self.url, {}, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('id_token', response.data)
+        verify.assert_not_called()
+
+    def test_firebase_not_configured(self, verify):
+        verify.side_effect = FirebaseUnavailable()
+        self.assertEqual(self.login().status_code, 503)
+
+    def test_old_authorization_header_is_ignored(self, verify):
+        verify.return_value = google_claims()
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer expired-or-garbage')
+        self.assertEqual(self.login().status_code, 201)
+
+    def test_firebase_user_cannot_use_password_login(self, verify):
+        verify.return_value = google_claims()
+        self.login()
+        response = self.client.post(
+            reverse('accounts:login'), {'email': 'student@colohouse.com', 'password': 'StrongPass123!'}
+        )
+        self.assertEqual(response.status_code, 401)
+
+    def test_firebase_uid_not_editable_from_profile(self, verify):
+        verify.return_value = google_claims()
+        access = self.login().data['access']
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + access)
+        self.client.patch(reverse('accounts:me'), {'firebase_uid': 'hijack'}, format='json')
+        self.assertTrue(User.objects.filter(firebase_uid='firebase-uid-1').exists())
+        self.assertNotIn('firebase_uid', self.client.get(reverse('accounts:me')).data)
+
+
+class FirebaseConfigTests(TestCase):
+    def post(self):
+        return APIClient().post(reverse('accounts:firebase_login'), {'id_token': 'x'}, format='json')
+
+    def test_missing_key_file_gives_503(self):
+        from firebase_admin import _apps
+        with patch.dict(_apps, clear=True), self.settings(FIREBASE_KEY_PATH='does-not-exist.json'):
+            response = self.post()
+        self.assertEqual(response.status_code, 503)
+
+    def test_wrong_key_file_gives_503(self):
+        from firebase_admin import _apps
+        with tempfile.NamedTemporaryFile('w', suffix='.json', delete=False) as file:
+            file.write('{"project_info": {"project_id": "colohouse"}, "client": []}')
+        try:
+            with patch.dict(_apps, clear=True), self.settings(FIREBASE_KEY_PATH=file.name):
+                response = self.post()
+        finally:
+            import os
+            os.remove(file.name)
+        self.assertEqual(response.status_code, 503)
+
+    @patch('accounts.firebase.get_firebase_app')
+    @patch('accounts.firebase.auth.verify_id_token', side_effect=ValueError('no project id'))
+    def test_server_config_error_gives_503_not_401(self, verify, get_app):
+        self.assertEqual(self.post().status_code, 503)
+
+    @patch('accounts.firebase.get_firebase_app')
+    @patch('accounts.firebase.auth.verify_id_token', side_effect=firebase_auth.InvalidIdTokenError('garbage'))
+    def test_garbage_token_gives_401(self, verify, get_app):
+        self.assertEqual(self.post().status_code, 401)
 
 
 class CityTests(TestCase):
