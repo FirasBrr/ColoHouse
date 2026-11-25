@@ -154,6 +154,13 @@ class ProfileTests(TestCase):
         self.user.refresh_from_db()
         self.assertEqual(self.user.email, 'student@colohouse.com')
 
+    def test_change_language(self):
+        response = self.client.patch(reverse('accounts:me'), {'language': 'ar'}, format='json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['language'], 'ar')
+        response = self.client.patch(reverse('accounts:me'), {'language': 'de'}, format='json')
+        self.assertEqual(response.status_code, 400)
+
     def test_user_cannot_verify_himself(self):
         self.client.patch(reverse('accounts:me'), {'is_verified': True}, format='json')
         self.user.refresh_from_db()

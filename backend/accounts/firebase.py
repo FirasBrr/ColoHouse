@@ -3,7 +3,7 @@ from pathlib import Path
 
 import firebase_admin
 from django.conf import settings
-from firebase_admin import auth, credentials
+from firebase_admin import auth, credentials, firestore
 from rest_framework.exceptions import APIException
 
 logger = logging.getLogger(__name__)
@@ -39,10 +39,17 @@ def get_firebase_app():
         logger.exception('Invalid Firebase key file %s: %s', key_path, error)
         raise FirebaseUnavailable('Firebase is not configured correctly on the server (invalid firebase-key.json).')
     try:
-        return firebase_admin.initialize_app(cred)
+        # httpTimeout: a slow push (FCM) or auth call never blocks a request for long
+        # (Firestore uses gRPC: chat/firestore.py sets its own timeout)
+        return firebase_admin.initialize_app(cred, {'httpTimeout': 10})
     except ValueError:
         # Another request started the app at the same moment
         return firebase_admin.get_app()
+
+
+def firestore_client():
+    """Cloud Firestore client of the project (used for the chat)."""
+    return firestore.client(app=get_firebase_app())
 
 
 def verify_id_token(id_token):

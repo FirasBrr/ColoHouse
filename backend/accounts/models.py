@@ -19,6 +19,12 @@ class City(models.Model):
         return f"{self.name}" + (f" ({self.region})" if self.region else "")
 
 
+class Language(models.TextChoices):
+    ENGLISH = 'en', 'English'
+    FRENCH = 'fr', 'Français'
+    ARABIC = 'ar', 'العربية'
+
+
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -68,6 +74,10 @@ class User(AbstractUser):
 
     # Firebase account linked to this user (set on the first Firebase login)
     firebase_uid = models.CharField(max_length=128, unique=True, null=True, blank=True)
+    # Push address of the user's phone (FirebaseMessaging.getToken()), empty = no push
+    fcm_token = models.CharField(max_length=512, blank=True, db_index=True)
+    # Language of the texts the server writes for this user (push notifications, match explanations)
+    language = models.CharField(max_length=2, choices=Language.choices, default=Language.ENGLISH)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']

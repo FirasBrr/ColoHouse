@@ -130,6 +130,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             'institution', 'occupation', 'city', 'city_id',
             'is_verified',
             'push_enabled', 'notify_requests', 'notify_messages',
+            'language',
             'date_joined',
         ]
         read_only_fields = ['id', 'email', 'date_joined', 'is_verified']
