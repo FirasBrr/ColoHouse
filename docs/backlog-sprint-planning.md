@@ -1,6 +1,6 @@
 # ColoHouse: Product Backlog and Sprint Planning
 
-Status as of 25 November 2026. Sprints 1 and 2 are done (57 story points); Sprint 3 is in progress; Sprint 4 is planned.
+Status as of 25 November 2026. Sprints 1 and 2 are done (57 story points); Sprint 3 is almost done (34 of 37 points, tested on the Android emulator); Sprint 4 is planned.
 
 ## 1. Product vision
 
@@ -59,8 +59,8 @@ Contact details stay private until a request is accepted.
 | US-06 | E1 | As a user, I want to choose which notifications I receive. | Should | 1 | S1 | Done |
 | US-07 | E1 | As a user, I want to delete my account and my data. | Must | 1 | S1 | Done |
 | US-08 | E1 | As a user, I want clear error messages under every form field. | Must | 2 | S1 | Done (validators still to add on 2 forms, S4) |
-| US-09 | E2 | As a user, I want to sign up and log in with email and password through Firebase Authentication, with email verification. | Must | 5 | S3 | In progress (backend done) |
-| US-10 | E2 | As a user, I want to log in with my Google account. | Must | 3 | S3 | In progress (backend done) |
+| US-09 | E2 | As a user, I want to sign up and log in with email and password through Firebase Authentication, with email verification. | Must | 5 | S3 | Done |
+| US-10 | E2 | As a user, I want to log in with my Google account. | Must | 3 | S3 | In progress (built; to test with a Google account on the device) |
 | US-11 | E3 | As a host, I want to publish a listing (description, rent, deposit, room type, location on a map, availability, rules) so that people can find my room. | Must | 5 | S2 | Done |
 | US-12 | E3 | As a host, I want to add and remove photos of my listing. | Must | 3 | S2 | Done (adding photos to an existing listing in the app, S4) |
 | US-13 | E3 | As a host, I want to edit, pause, reactivate or close my listing. | Must | 3 | S2 | Done |
@@ -72,16 +72,16 @@ Contact details stay private until a request is accepted.
 | US-19 | E5 | As a host, I want to accept or decline a request, safely even if two actions happen at the same time. | Must | 3 | S2 | Done |
 | US-20 | E5 | As a seeker, I want to see my sent requests and cancel one. | Should | 2 | S2 | Done |
 | US-21 | E5 | As a user, I want the exact address and phone number to stay hidden until a request is accepted. | Must | 2 | S2 | Done |
-| US-22 | E6 | As a person looking for a room, I want a ranked list of compatible roommates with a score from 0 to 100. | Must | 8 | S3 | In progress (backend done) |
-| US-23 | E6 | As a person looking for a room, I want to see the score breakdown and a short explanation of each match. | Should | 3 | S3 | In progress (backend done) |
-| US-24 | E7 | As a user, I want to chat in real time with the other person once a request is accepted. | Must | 8 | S3 | In progress (backend done) |
-| US-25 | E8 | As a host, I want a push notification when I receive a request; as a seeker, when my request is accepted or declined (app in foreground or background). | Must | 5 | S3 | In progress (backend done) |
-| US-26 | E8 | As a user, I want a tap on a notification to open the related screen. | Must | 2 | S3 | In progress (backend done) |
-| US-27 | E8 | As a user, I want a notification history with an unread counter. | Should | 3 | S3 | In progress (backend done) |
+| US-22 | E6 | As a person looking for a room, I want a ranked list of compatible roommates with a score from 0 to 100. | Must | 8 | S3 | Done |
+| US-23 | E6 | As a person looking for a room, I want to see the score breakdown and a short explanation of each match. | Should | 3 | S3 | Done |
+| US-24 | E7 | As a user, I want to chat in real time with the other person once a request is accepted. | Must | 8 | S3 | Done |
+| US-25 | E8 | As a host, I want a push notification when I receive a request; as a seeker, when my request is accepted or declined (app in foreground or background). | Must | 5 | S3 | Done |
+| US-26 | E8 | As a user, I want a tap on a notification to open the related screen. | Must | 2 | S3 | Done |
+| US-27 | E8 | As a user, I want a notification history with an unread counter. | Should | 3 | S3 | Done |
 | US-28 | E9 | As a user, I want to switch between light and dark theme and keep my choice when I reopen the app. | Must | 2 | S2 | Done |
 | US-29 | E9 | As a user, I want the app in French, English and Arabic (right-to-left), with a language switch inside the app. | Must | 8 | S4 | To do |
-| US-30 | E9 | As a user, I want clear navigation with a drawer, a bottom navigation bar and tabs. | Must | 2 | S4 | In progress (tabs done) |
-| US-31 | E9 | As a user, I want smooth animations (Hero, AnimatedContainer, AnimatedOpacity, Lottie). | Must | 3 | S4 | In progress (AnimatedContainer done) |
+| US-30 | E9 | As a user, I want clear navigation with a drawer, a bottom navigation bar and tabs. | Must | 2 | S4 | In progress (tabs done: Messages / Requests / Sent) |
+| US-31 | E9 | As a user, I want smooth animations (Hero, AnimatedContainer, AnimatedOpacity, Lottie). | Must | 3 | S4 | In progress (Hero, AnimatedContainer, AnimatedOpacity done; Lottie to do) |
 | US-32 | E9 | As a user, I want loading indicators, empty states and clear error messages. | Must | 2 | S2 | Done (retry button on errors, S4) |
 | US-33 | E10 | As the product owner, I want a banner ad and an interstitial ad (Google test IDs only). | Must | 3 | S4 | To do |
 | US-34 | E11 | As an admin, I want to verify users and approve or hide listings. | Should | 2 | S2 | Done |
@@ -108,7 +108,7 @@ Contact details stay private until a request is accepted.
 |---|---|---|---|---|---|
 | S1 Foundations | 1–2 | Sign up, log in and fill in the profile and preferences on the emulator | 20 | 20 | Done |
 | S2 Housing | 3–4 | A host publishes a listing, a seeker finds it on the map, sends a request, the host accepts | 37 | 37 | Done |
-| S3 Firebase & social | 5–6 | Firebase login, ranked roommates, chat after acceptance, push notifications | 37 | 0 (backend of all 8 stories done, app to do) | In progress |
+| S3 Firebase & social | 5–6 | Firebase login, ranked roommates, chat after acceptance, push notifications | 37 | 34 | Almost done (Google Sign-In to test on a device) |
 | S4 Experience & release | 7–8 | Languages, ads, navigation and animations, admin, AI bonus, hardening, release APK | 35 | — | Planned |
 
 Fill in the calendar dates of each sprint. The delivery log in section 6 gives the real dates from the git history.
@@ -171,7 +171,7 @@ The 4 sprints, their themes and their demos are kept. These changes came from th
 
 **Review:** host publishes → seeker finds it on the map → sends a request → host accepts → address and phone become visible.
 
-### Sprint 3: Firebase, matching, chat, notifications (In progress)
+### Sprint 3: Firebase, matching, chat, notifications (Almost done)
 
 **Goal:** users log in with FirebaseAuth, see ranked roommates, chat after an accepted request and receive push notifications.
 **Stories:** US-09, US-10, US-22 to US-27 (37 SP).
@@ -183,12 +183,12 @@ The 4 sprints, their themes and their demos are kept. These changes came from th
     - [x] Chat: accepting a request opens a conversation; the backend creates its Cloud Firestore document, and Firestore security rules allow only the two participants (tested with 21 cases in the Firebase emulator) (US-24).
     - [x] Roommate matching: hard filters (looking for a room, smoking compatible both ways, budgets at most 30 % apart, move-in dates at most 60 days apart), weighted score (budget 25, sleep schedule 20, cleanliness 20, noise tolerance 15, smoking 10, distance 10), breakdown stored as JSON in MatchResult, template explanation in the user's language (US-22, US-23).
 - Frontend (Flutter)
-    - [ ] Firebase setup (firebase_core, Gradle plugin); email/password sign-up with email verification; Google Sign-In button.
-    - [ ] firebase_messaging: permission, foreground and background notifications, tap opens the related screen.
-    - [ ] Chat list and chat thread screens on Firestore streams.
-    - [ ] Roommates screen with score and breakdown; notifications screen.
+    - [x] Firebase setup (firebase_core, Gradle plugin); email/password sign-up with email verification ("check your inbox" screen, resend with cooldown), password reset; Google Sign-In button (to test with a Google account).
+    - [x] firebase_messaging: permission, foreground and background notifications, tap opens the related screen, phone unregistered on log out.
+    - [x] Chat tab (Messages / Requests / Sent) and chat thread on Firestore streams, read receipts, "Open chat" and "Compatibility" buttons on requests.
+    - [x] Roommates screen and compatibility screen (animated score ring, breakdown bars); notification history with unread badge.
 
-**Review (planned):** Google login → ranked roommates with breakdown → request accepted → push notification → chat opens.
+**Review (done on the emulator):** email sign-up with verification → profile setup → a student sends a request → push → tap opens the requests → host checks compatibility and accepts → chat in real time both ways → background push opens the chat → log out stops the pushes.
 
 ### Sprint 4: Experience, administration, AI, release (Planned)
 
@@ -213,7 +213,8 @@ The 4 sprints, their themes and their demos are kept. These changes came from th
 
 | Date | Delivered |
 |---|---|
-| 2026-11-25 | Sprint 3 backend: Firebase login, push notifications and history, Firestore chat with security rules, roommate matching (not yet committed) |
+| 2026-11-25 | Sprint 3 app: Firebase login screens, push notifications, chat on Firestore, roommates and notifications screens (not yet committed) |
+| 2026-11-25 | Sprint 3 backend: Firebase login, push notifications and history, Firestore chat with security rules, roommate matching |
 | 2026-11-16 | Dark mode with saved choice |
 | 2026-11-13 | Listing filters and map view |
 | 2026-11-12 | Home screen and search tab |
@@ -226,18 +227,18 @@ The 4 sprints, their themes and their demos are kept. These changes came from th
 
 | Requirement | Backlog item | Status |
 |---|---|---|
-| Cloud Firestore | US-24 (chat), US-42 (bonus) | S3, backend + security rules done |
-| FirebaseAuth email/password + Google Sign-In | US-09, US-10 | S3, backend done |
+| Cloud Firestore | US-24 (chat), US-42 (bonus) | Done (real-time chat) |
+| FirebaseAuth email/password + Google Sign-In | US-09, US-10 | Email/password done; Google built, to test on a device |
 | Forms with validation | US-08 | Done (2 forms to complete in S4) |
-| Push notifications (foreground, background, tap opens a screen, triggered by an action) | US-25, US-26 | S3, backend done (pushes on request sent / accepted / declined and new message) |
+| Push notifications (foreground, background, tap opens a screen, triggered by an action) | US-25, US-26 | Done (request sent / accepted / declined, new message) |
 | French, English, Arabic with RTL | US-29 | S4 |
 | Light/dark theme saved | US-28 | Done |
 | Drawer, BottomNavigationBar, TabBar | US-30 | TabBar done, rest S4 |
-| At least 10 screens | All epics | Done (13 screens today) |
-| Animations (Hero, AnimatedContainer, AnimatedOpacity, Lottie) | US-31 | AnimatedContainer done, rest S4 |
+| At least 10 screens | All epics | Done (18 screens today) |
+| Animations (Hero, AnimatedContainer, AnimatedOpacity, Lottie) | US-31 | Hero, AnimatedContainer, AnimatedOpacity done; Lottie S4 |
 | State management | Riverpod, all sprints | Done |
 | Named routes, arguments, nested navigation | go_router, all sprints | Done |
-| REST API with dio, FutureBuilder, ListView.builder | Django API, S4 task | dio done; FutureBuilder/ListView.builder S4 |
+| REST API with dio, FutureBuilder, ListView.builder | Django API, all sprints | Done (FutureBuilder in the chat and compatibility screens, ListView.builder in the lists) |
 | Loading, empty and error states | US-32 | Done (retry in S4) |
 | Ads: banner + interstitial (test IDs) | US-33 | S4 |
 | Bonus: payment, AI, offline database | US-42, US-36/US-37, US-41 | AI planned in S4; others not planned |
