@@ -47,6 +47,17 @@ def get_firebase_app():
         return firebase_admin.get_app()
 
 
+def delete_firebase_user(uid):
+    """Deletes the Firebase Auth account (when the user deletes their account). Never raises.
+    Done here with the Admin SDK: from the phone, Firebase refuses unless the login is very recent."""
+    try:
+        auth.delete_user(uid, app=get_firebase_app())
+    except auth.UserNotFoundError:
+        pass
+    except Exception:
+        logger.exception('Could not delete the Firebase user %s', uid)
+
+
 def firestore_client():
     """Cloud Firestore client of the project (used for the chat)."""
     return firestore.client(app=get_firebase_app())

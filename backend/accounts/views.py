@@ -1,6 +1,8 @@
+from django.db import transaction
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from .firebase import delete_firebase_user
 from .models import City, RoommateProfile, User
 from .serializers import (
     CitySerializer,
@@ -43,6 +45,13 @@ class MeView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         return self.request.user
+
+    def perform_destroy(self, user):
+        """Deleting the account also deletes its Firebase login (after the database commit)."""
+        firebase_uid = user.firebase_uid
+        user.delete()
+        if firebase_uid:
+            transaction.on_commit(lambda: delete_firebase_user(firebase_uid))
 
 
 class PreferencesView(generics.RetrieveUpdateAPIView):

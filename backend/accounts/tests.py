@@ -203,6 +203,26 @@ class ProfileTests(TestCase):
         self.assertFalse(User.objects.filter(email='student@colohouse.com').exists())
         self.assertEqual(RoommateProfile.objects.count(), 0)
 
+    @patch('accounts.views.delete_firebase_user')
+    def test_delete_account_also_deletes_the_firebase_login(self, delete_firebase_user):
+        self.user.firebase_uid = 'firebase-uid-1'
+        self.user.save()
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.delete(reverse('accounts:me'))
+        delete_firebase_user.assert_called_once_with('firebase-uid-1')
+
+    @patch('accounts.views.delete_firebase_user')
+    def test_delete_account_without_firebase_login(self, delete_firebase_user):
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.delete(reverse('accounts:me'))
+        delete_firebase_user.assert_not_called()
+
+    @patch('accounts.firebase.get_firebase_app')
+    @patch('accounts.firebase.auth.delete_user', side_effect=RuntimeError('firebase down'))
+    def test_firebase_delete_failure_never_raises(self, delete_user, get_app):
+        from .firebase import delete_firebase_user
+        delete_firebase_user('firebase-uid-1')
+
 
 class PreferencesTests(TestCase):
     def setUp(self):
