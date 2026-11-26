@@ -19,6 +19,7 @@ class DioClient {
   static const _noRefreshPaths = [
     '/auth/login/',
     '/auth/register/',
+    '/auth/firebase/',
     '/auth/token/refresh/',
   ];
 

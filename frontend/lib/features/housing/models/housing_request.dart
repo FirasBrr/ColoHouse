@@ -35,6 +35,9 @@ class HousingRequest {
   final String message;
   final String status; // 'pending', 'accepted', 'declined', 'cancelled'
   final Map<String, dynamic>? contact; // Holds address, phones when accepted
+  final int? senderId; // for the compatibility screen (/roommates/<senderId>)
+  final int? ownerId;
+  final int? conversationId; // chat opened when the request was accepted (null before)
 
   HousingRequest({
     required this.id,
@@ -44,6 +47,9 @@ class HousingRequest {
     required this.message,
     required this.status,
     this.contact,
+    this.senderId,
+    this.ownerId,
+    this.conversationId,
   });
 
   factory HousingRequest.fromJson(Map<String, dynamic> json) {
@@ -55,6 +61,9 @@ class HousingRequest {
       message: json['message'] as String? ?? '',
       status: json['status'] as String? ?? 'pending',
       contact: json['contact'] as Map<String, dynamic>?,
+      senderId: json['sender']?['id'] as int?,
+      ownerId: json['owner']?['id'] as int?,
+      conversationId: json['conversation_id'] as int?,
     );
   }
 }

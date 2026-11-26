@@ -38,6 +38,18 @@ class AuthRepository {
     return await api.me();
   }
 
+  /// FirebaseAuth login: exchanges the Firebase ID token for our tokens, saves them, loads the profile.
+  /// `created` = the account was just created (show the profile setup).
+  Future<({User user, bool created})> loginWithFirebase(
+    String idToken, {
+    String? firstName,
+    String? lastName,
+  }) async {
+    final result = await api.firebaseLogin(idToken: idToken, firstName: firstName, lastName: lastName);
+    await storage.saveTokens(access: result.access, refresh: result.refresh);
+    return (user: await api.me(), created: result.created);
+  }
+
   Future<User?> tryRestoreSession() async {
     final access = await storage.accessToken;
     if (access == null) return null;

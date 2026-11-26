@@ -9,6 +9,11 @@ class AuthField extends StatefulWidget {
   final bool obscure;
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
+  final bool enabled;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onFieldSubmitted;
+  final Iterable<String>? autofillHints;
+  final TextCapitalization textCapitalization;
 
   const AuthField({
     super.key,
@@ -19,6 +24,11 @@ class AuthField extends StatefulWidget {
     this.obscure = false,
     this.keyboardType,
     this.validator,
+    this.enabled = true,
+    this.textInputAction,
+    this.onFieldSubmitted,
+    this.autofillHints,
+    this.textCapitalization = TextCapitalization.none,
   });
 
   @override
@@ -41,6 +51,11 @@ class _AuthFieldState extends State<AuthField> {
       obscureText: _obscured,
       keyboardType: widget.keyboardType,
       validator: widget.validator,
+      enabled: widget.enabled,
+      textInputAction: widget.textInputAction,
+      onFieldSubmitted: widget.onFieldSubmitted,
+      autofillHints: widget.autofillHints,
+      textCapitalization: widget.textCapitalization,
       decoration: InputDecoration(
         labelText: widget.label,
         hintText: widget.hint,
@@ -54,7 +69,9 @@ class _AuthFieldState extends State<AuthField> {
                   size: 20,
                   color: context.colors.outline,
                 ),
-                onPressed: () => setState(() => _obscured = !_obscured),
+                onPressed: widget.enabled
+                    ? () => setState(() => _obscured = !_obscured)
+                    : null,
               )
             : null,
       ),

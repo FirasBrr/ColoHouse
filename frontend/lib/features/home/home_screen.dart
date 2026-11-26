@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../auth/providers/auth_provider.dart';
 import '../housing/ui/widgets/listing_card.dart'; // Import the real card
+import '../matching/ui/widgets/top_matches_preview.dart';
 import 'widgets/home_app_bar.dart';
 import 'widgets/home_search_bar.dart';
 import 'widgets/placeholder_card.dart';
@@ -116,20 +117,14 @@ class HomeScreen extends ConsumerWidget {
                 
                 const SizedBox(height: 24),
 
-                // Potential roommates — placeholder
+                // Potential roommates: the 3 best matches
                 SectionHeader(
                   title: 'Potential roommates',
-                  onSeeAll: () => _showComingSoon(context, 'Matching'),
+                  onSeeAll: () => context.push('/roommates'),
                 ),
                 const SizedBox(height: 12),
-                const PlaceholderCard(
-                  icon: Icons.groups_outlined,
-                  title: 'Roommate matching ',
-                  subtitle:
-                      'We\'ll suggest compatible people based on your preferences.',
-                  height: 180,
-                ),
-                const SizedBox(height: 24),
+                const TopMatchesPreview(),
+                const SizedBox(height: 14),
               ],
             ),
           ),
@@ -148,11 +143,5 @@ class HomeScreen extends ConsumerWidget {
     return name == null || name.isEmpty
         ? '$greeting 👋'
         : '$greeting, $name 👋';
-  }
-
-  void _showComingSoon(BuildContext context, String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$feature — coming soon')),
-    );
   }
 }

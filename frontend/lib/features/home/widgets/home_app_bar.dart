@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // Add this
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/theme_provider.dart'; // Add this
+import '../../notifications/ui/widgets/notification_bell.dart';
 
 class HomeAppBar extends ConsumerWidget { // Change to ConsumerWidget
   final dynamic user;
@@ -59,16 +60,8 @@ class HomeAppBar extends ConsumerWidget { // Change to ConsumerWidget
             },
           ),
 
-          // Notification Bell
-          IconButton(
-            icon: Icon(Icons.notifications_outlined,
-                color: context.colors.onSurfaceVariant),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Notifications coming soon')),
-              );
-            },
-          ),
+          // Notification bell with the unread badge
+          const NotificationBell(),
         ],
       ),
     );

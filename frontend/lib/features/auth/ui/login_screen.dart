@@ -1,11 +1,16 @@
-import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/errors/auth_exception.dart';
 import '../../../core/theme/app_colors.dart';
+import '../data/firebase_auth_service.dart';
 import '../providers/auth_provider.dart';
+import 'widgets/auth_error_banner.dart';
 import 'widgets/auth_field.dart';
+import 'widgets/auth_validators.dart';
+import 'widgets/forgot_password_dialog.dart';
+import 'widgets/google_sign_in_button.dart';
+import 'widgets/or_divider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -18,7 +23,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   bool _loading = false;
+  bool _googleLoading = false;
   String? _error;
+
+  bool get _busy => _loading || _googleLoading;
 
   @override
   void dispose() {
@@ -27,7 +35,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  // On success the router redirects by itself (home, or profile setup for a new account)
   Future<void> _submit() async {
+    if (_busy) return;
+    FocusScope.of(context).unfocus();
     setState(() => _error = null);
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
@@ -36,13 +47,57 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             _email.text.trim(),
             _password.text,
           );
+    } on EmailNotVerifiedException {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Verify your email first')),
+      );
+      context.go('/verify-email');
     } on AuthException catch (e) {
-      setState(() => _error = e.message);
-    } catch (e) {
-      setState(() => _error = 'Unexpected error: $e');
+      if (mounted) setState(() => _error = e.message);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error = 'Something went wrong. Please try again.');
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _google() async {
+    if (_busy) return;
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _error = null;
+      _googleLoading = true;
+    });
+    try {
+      await ref.read(authProvider.notifier).loginWithGoogle();
+    } on SignInCancelled {
+      // Picker closed: nothing to show
+    } on AuthException catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error = 'Google sign-in failed. Please try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _googleLoading = false);
+    }
+  }
+
+  Future<void> _forgotPassword() async {
+    final email = await showForgotPasswordDialog(
+      context,
+      initialEmail: _email.text.trim(),
+    );
+    if (email == null || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+            'If an account exists for $email, a reset link is on its way.'),
+      ),
+    );
   }
 
   @override
@@ -124,94 +179,80 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ],
                 ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      if (_error != null) ...[
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: context.colors.errorContainer,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.error_outline,
-                                  color: context.colors.error, size: 20),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(_error!,
-                                    style: TextStyle(
-                                        color: context.colors.error,
-                                        fontSize: 13)),
-                              ),
-                            ],
-                          ),
+                child: AutofillGroup(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        AuthErrorBanner(message: _error),
+                        AuthField(
+                          controller: _email,
+                          label: 'Email',
+                          hint: 'you@example.com',
+                          prefixIcon: Icons.mail_outline,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          autofillHints: const [AutofillHints.email],
+                          enabled: !_busy,
+                          validator: AuthValidators.email,
                         ),
                         const SizedBox(height: 16),
-                      ],
-                      AuthField(
-                        controller: _email,
-                        label: 'Email',
-                        hint: 'you@example.com',
-                        prefixIcon: Icons.mail_outline,
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) {
-                            return 'Email is required';
-                          }
-                          if (!EmailValidator.validate(v.trim())) {
-                            return 'Invalid email';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      AuthField(
-                        controller: _password,
-                        label: 'Password',
-                        hint: '••••••••',
-                        prefixIcon: Icons.lock_outline,
-                        obscure: true,
-                        validator: (v) =>
-                            (v == null || v.isEmpty)
-                                ? 'Password is required'
-                                : null,
-                      ),
-                      const SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () {},
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            minimumSize: const Size(0, 32),
-                          ),
-                          child: const Text('Forgot password?',
-                              style: TextStyle(fontSize: 12)),
+                        AuthField(
+                          controller: _password,
+                          label: 'Password',
+                          hint: '••••••••',
+                          prefixIcon: Icons.lock_outline,
+                          obscure: true,
+                          textInputAction: TextInputAction.done,
+                          autofillHints: const [AutofillHints.password],
+                          onFieldSubmitted: (_) => _submit(),
+                          enabled: !_busy,
+                          validator: (v) => (v == null || v.isEmpty)
+                              ? 'Password is required'
+                              : null,
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      FilledButton(
-                        onPressed: _loading ? null : _submit,
-                        child: _loading
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                    color: Colors.white, strokeWidth: 2.5),
-                              )
-                            : const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text('Log in'),
-                                  SizedBox(width: 8),
-                                  Icon(Icons.arrow_forward, size: 18),
-                                ],
-                              ),
-                      ),
-                    ],
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: _busy ? null : _forgotPassword,
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(0, 32),
+                            ),
+                            child: const Text('Forgot password?',
+                                style: TextStyle(fontSize: 12)),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        FilledButton(
+                          onPressed: _busy ? null : _submit,
+                          child: _loading
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                      color: Colors.white, strokeWidth: 2.5),
+                                )
+                              : const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text('Log in'),
+                                    SizedBox(width: 8),
+                                    Icon(Icons.arrow_forward, size: 18),
+                                  ],
+                                ),
+                        ),
+                        const SizedBox(height: 20),
+                        const OrDivider(),
+                        const SizedBox(height: 20),
+                        GoogleSignInButton(
+                          onPressed: _busy ? null : _google,
+                          loading: _googleLoading,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -222,8 +263,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Text("Don't have an account?",
                       style: TextStyle(color: context.colors.onSurfaceVariant)),
                   TextButton(
-                    onPressed:
-                        _loading ? null : () => context.go('/register'),
+                    onPressed: _busy ? null : () => context.go('/register'),
                     child: const Text('Register',
                         style: TextStyle(fontWeight: FontWeight.w600)),
                   ),

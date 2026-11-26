@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/errors/auth_exception.dart';
 import '../auth/providers/auth_provider.dart';
+import '../chat/ui/widgets/chat_states.dart';
 import '../housing/models/housing_request.dart';
 
 class SentRequestsTab extends ConsumerWidget {
@@ -17,20 +19,22 @@ class SentRequestsTab extends ConsumerWidget {
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('No')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: ctx.colors.error),
-            onPressed: () => Navigator.pop(ctx, true), 
+            style: FilledButton.styleFrom(backgroundColor: ctx.colors.error, minimumSize: const Size(0, 44)),
+            onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Yes, Cancel')
           ),
         ],
       ),
     );
 
-    if (confirmed != true) return;
-
+    if (confirmed != true || !context.mounted) return;
+    if (!_cancelsInFlight.add(requestId)) return;
+    // Read before the await: switching tab meanwhile disposes this widget and its ref
+    final container = ProviderScope.containerOf(context, listen: false);
     try {
-      await ref.read(authRepoProvider).api.cancelRequest(requestId);
-      ref.invalidate(sentRequestsProvider);
-      
+      await container.read(authRepoProvider).api.cancelRequest(requestId);
+      container.invalidate(sentRequestsProvider);
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Request cancelled')),
@@ -42,44 +46,49 @@ class SentRequestsTab extends ConsumerWidget {
           SnackBar(content: Text(e.message), backgroundColor: context.colors.error),
         );
       }
+    } finally {
+      _cancelsInFlight.remove(requestId);
     }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final requestsAsync = ref.watch(sentRequestsProvider);
+    Future<void> refresh() => ref.refresh(sentRequestsProvider.future).then<void>((_) {}, onError: (_) {});
 
     return requestsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
+      error: (e, _) => ChatErrorState(
+        message: e is AuthException ? e.message : 'Could not load your sent requests.',
+        onRetry: () => ref.invalidate(sentRequestsProvider),
+      ),
       data: (requests) {
         if (requests.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.outbox_outlined, size: 64, color: context.colors.outline),
-                const SizedBox(height: 16),
-                const Text('No sent requests', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 8),
-                Text('When you request a room, it will appear here.', style: TextStyle(color: context.colors.outline)),
-              ],
+          return RefreshableFill(
+            onRefresh: refresh,
+            child: const ChatEmptyState(
+              icon: Icons.outbox_outlined,
+              title: 'No sent requests',
+              message: 'When you request a room, it will appear here.',
             ),
           );
         }
 
         return RefreshIndicator(
           color: context.colors.primary,
-          onRefresh: () async => ref.invalidate(sentRequestsProvider),
-          child: ListView.separated(
-            padding: const EdgeInsets.all(16),
+          onRefresh: refresh,
+          child: ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             itemCount: requests.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 16),
             itemBuilder: (context, index) {
               final req = requests[index];
-              return _SentRequestCard(
-                request: req,
-                onCancel: () => _cancelRequest(context, ref, req.id),
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _SentRequestCard(
+                  request: req,
+                  onCancel: () => _cancelRequest(context, ref, req.id),
+                ),
               );
             },
           ),
@@ -99,6 +108,13 @@ class _SentRequestCard extends StatelessWidget {
   Widget build(BuildContext context) {
     bool isPending = request.status == 'pending';
     bool isAccepted = request.status == 'accepted';
+    final conversationId = request.conversationId;
+    // pending = amber, accepted / completed = green, declined / cancelled = red
+    final statusColor = isPending
+        ? context.colors.tertiary
+        : isAccepted || request.status == 'completed'
+            ? context.colors.primary
+            : context.colors.error;
 
     return Container(
       decoration: BoxDecoration(
@@ -115,15 +131,26 @@ class _SentRequestCard extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: request.listing.photo != null
-                      ? Image.network(request.listing.photo!, width: 50, height: 50, fit: BoxFit.cover)
-                      : Container(width: 50, height: 50, color: context.colors.surfaceLow, child: const Icon(Icons.home)),
+                      ? Image.network(
+                          request.listing.photo!,
+                          width: 50,
+                          height: 50,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => _photoPlaceholder(context),
+                        )
+                      : _photoPlaceholder(context),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(request.listing.title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                      Text(
+                        request.listing.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                      ),
                       Text('To: ${request.ownerName}', style: TextStyle(fontSize: 12, color: context.colors.outline)),
                     ],
                   ),
@@ -131,22 +158,18 @@ class _SentRequestCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: isPending ? Colors.orange.withValues(alpha: 0.1) : isAccepted ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+                    color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     request.status.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: isPending ? Colors.orange : isAccepted ? Colors.green : Colors.red,
-                    ),
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: statusColor),
                   ),
                 ),
               ],
             ),
           ),
-          
+
           if (isAccepted && request.contact != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -176,6 +199,18 @@ class _SentRequestCard extends StatelessWidget {
               ),
             ),
 
+          // The chat opened when the host accepted
+          if (conversationId != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: FilledButton.icon(
+                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(44)),
+                onPressed: () => context.push('/conversation/$conversationId'),
+                icon: const Icon(Icons.chat_bubble_outline, size: 18),
+                label: const Text('Open chat'),
+              ),
+            ),
+
           if (isPending)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -183,7 +218,10 @@ class _SentRequestCard extends StatelessWidget {
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: onCancel,
-                  style: OutlinedButton.styleFrom(foregroundColor: Colors.red, side: const BorderSide(color: Colors.red)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: context.colors.error,
+                    side: BorderSide(color: context.colors.error),
+                  ),
                   child: const Text('Cancel Request'),
                 ),
               ),
@@ -192,4 +230,16 @@ class _SentRequestCard extends StatelessWidget {
       ),
     );
   }
+
+  Widget _photoPlaceholder(BuildContext context) {
+    return Container(
+      width: 50,
+      height: 50,
+      color: context.colors.surfaceLow,
+      child: Icon(Icons.home, color: context.colors.outline),
+    );
+  }
 }
+
+// Requests whose cancel call is running (ignores a second tap meanwhile)
+final _cancelsInFlight = <int>{};

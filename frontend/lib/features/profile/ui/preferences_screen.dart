@@ -5,6 +5,7 @@ import '../../../core/errors/auth_exception.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/ui/widgets/auth_field.dart';
+import '../../matching/providers/matching_providers.dart';
 class PreferencesScreen extends ConsumerStatefulWidget {
   const PreferencesScreen({super.key});
   @override
@@ -84,6 +85,8 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
         'accepts_smokers': _acceptsSmokers,
         'looking_for_room': _lookingForRoom,
       });
+      // New preferences = new compatibility scores (Home, Search and Roommates lists)
+      ref.invalidate(matchesProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Preferences saved')),

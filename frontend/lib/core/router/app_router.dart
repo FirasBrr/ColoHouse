@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,6 +6,11 @@ import '../../features/auth/providers/auth_provider.dart';
 import '../../features/auth/ui/login_screen.dart';
 import '../../features/auth/ui/register_screen.dart';
 import '../../features/auth/ui/splash_screen.dart';
+import '../../features/auth/ui/verify_email_screen.dart';
+import '../../features/chat/ui/conversation_screen.dart';
+import '../../features/matching/ui/match_detail_screen.dart';
+import '../../features/matching/ui/roommates_screen.dart';
+import '../../features/notifications/ui/notifications_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/home/search_tab.dart';
 import '../../features/home/post_tab.dart';
@@ -28,7 +33,18 @@ class _AuthListenable extends ChangeNotifier {
 final routerProvider = Provider<GoRouter>((ref) {
   final listenable = _AuthListenable(ref);
 
-  return GoRouter(
+  late final GoRouter router;
+  // A new account opens the profile setup ON TOP of the home screen (push), so Back returns to the
+  // app. Redirecting straight to /profile/edit closed the app on Back (Android 16 predictive back).
+  ref.listen<AuthState>(authProvider, (previous, next) {
+    if (next.status == AuthStatus.authenticated &&
+        next.isNewAccount &&
+        previous?.status != AuthStatus.authenticated) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => router.push('/profile/edit'));
+    }
+  });
+
+  return router = GoRouter(
     initialLocation: '/splash',
     refreshListenable: listenable,
 
@@ -40,18 +56,25 @@ final routerProvider = Provider<GoRouter>((ref) {
         return loc == '/splash' ? null : '/splash';
       }
 
-      final onAuthRoute =
-          loc == '/login' || loc == '/register' || loc == '/splash';
+      // Screens reachable without being logged in to the API
+      const publicRoutes = ['/login', '/register', '/verify-email'];
+      final onAuthRoute = publicRoutes.contains(loc) || loc == '/splash';
 
       if (auth.status == AuthStatus.unauthenticated) {
-        return (loc == '/login' || loc == '/register') ? null : '/login';
+        return publicRoutes.contains(loc) ? null : '/login';
       }
 
+      // Just logged in: home (a new account then gets the profile setup on top, see above)
       if (onAuthRoute) return '/';
       return null;
     },
 
     routes: [
+      GoRoute(
+        path: '/verify-email',
+        name: 'verify-email',
+        builder: (_, __) => const VerifyEmailScreen(),
+      ),
       GoRoute(
         path: '/splash',
         name: 'splash',
@@ -112,7 +135,8 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/chat',
                 name: 'chat',
-                builder: (_, __) => const ChatTab(),
+                // /chat?tab=messages|requests|sent (used by notification taps)
+                builder: (_, state) => ChatTab(initialTab: state.uri.queryParameters['tab']),
               ),
             ],
           ),
@@ -160,6 +184,32 @@ final routerProvider = Provider<GoRouter>((ref) {
           final id = int.parse(state.pathParameters['id']!);
           return ListingDetailsScreen(listingId: id);
         },
+      ),
+
+      // ---- Sprint 3: notifications, chat, roommates ----
+      GoRoute(
+        path: '/notifications',
+        name: 'notifications',
+        builder: (_, __) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/conversation/:id',
+        name: 'conversation',
+        builder: (_, state) => ConversationScreen(
+          conversationId: int.parse(state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: '/roommates',
+        name: 'roommates',
+        builder: (_, __) => const RoommatesScreen(),
+      ),
+      GoRoute(
+        path: '/roommates/:userId',
+        name: 'roommate-detail',
+        builder: (_, state) => MatchDetailScreen(
+          userId: int.parse(state.pathParameters['userId']!),
+        ),
       ),
     ],
   );

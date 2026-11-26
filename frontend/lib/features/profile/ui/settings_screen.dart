@@ -52,8 +52,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            style:
-                FilledButton.styleFrom(backgroundColor: ctx.colors.error),
+            style: FilledButton.styleFrom(
+              backgroundColor: ctx.colors.error,
+              minimumSize: const Size(96, 44),
+            ),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Delete'),
           ),
@@ -64,13 +66,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     setState(() => _deleting = true);
     try {
-      await ref.read(authRepoProvider).deleteAccount();
-      await ref.read(authProvider.notifier).logout();
-      // Router will redirect to /login automatically
+      // Server account + Firebase user + local session; the router then redirects to /login
+      await ref.read(authProvider.notifier).deleteAccount();
     } on AuthException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(e.message),
+          backgroundColor: context.colors.error,
+        ));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('Could not delete your account. Please try again.'),
+          backgroundColor: context.colors.error,
+        ));
       }
     } finally {
       if (mounted) setState(() => _deleting = false);

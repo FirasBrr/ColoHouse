@@ -1,10 +1,18 @@
 import 'package:dio/dio.dart';
+import '../../../core/errors/api_error.dart';
 import '../../../core/errors/auth_exception.dart';
 import '../models/user.dart';
 import '../../profile/models/roommate_preferences.dart';
 import '../../housing/models/listing.dart';
 import '../../housing/models/housing_request.dart';
 import '../../housing/models/listing_filters.dart';
+
+class FirebaseLoginResult {
+  final String access;
+  final String refresh;
+  final bool created; // true = new account, show the profile setup
+  FirebaseLoginResult({required this.access, required this.refresh, required this.created});
+}
 
 class AuthApi {
   final Dio dio;
@@ -44,6 +52,30 @@ class AuthApi {
         'access': data['access'] as String,
         'refresh': data['refresh'] as String,
       };
+    } on DioException catch (e) {
+      throw AuthException(_errorMessage(e));
+    }
+  }
+
+  /// FirebaseAuth login: exchanges the Firebase ID token for our JWT pair.
+  /// The names are only used when the account is created.
+  Future<FirebaseLoginResult> firebaseLogin({
+    required String idToken,
+    String? firstName,
+    String? lastName,
+  }) async {
+    try {
+      final res = await dio.post('/auth/firebase/', data: {
+        'id_token': idToken,
+        if (firstName != null && firstName.isNotEmpty) 'first_name': firstName,
+        if (lastName != null && lastName.isNotEmpty) 'last_name': lastName,
+      });
+      final data = res.data as Map<String, dynamic>;
+      return FirebaseLoginResult(
+        access: data['access'] as String,
+        refresh: data['refresh'] as String,
+        created: data['created'] as bool? ?? false,
+      );
     } on DioException catch (e) {
       throw AuthException(_errorMessage(e));
     }
@@ -297,30 +329,7 @@ class AuthApi {
   }
 
   // ---------------- ERRORS ----------------
-  String _errorMessage(DioException e) {
-    final status = e.response?.statusCode;
-    final data = e.response?.data;
-
-    if (status == 401) {
-      if (data is Map && data['detail'] is String) return data['detail'];
-      return 'Invalid email or password.';
-    }
-
-    if (status == 400 && data is Map) {
-      for (final value in data.values) {
-        if (value is List && value.isNotEmpty) {
-          return value.first.toString();
-        }
-      }
-    }
-
-    if (e.type == DioExceptionType.connectionTimeout ||
-        e.type == DioExceptionType.connectionError) {
-      return 'Cannot reach the server. Is the backend running?';
-    }
-
-    return 'Something went wrong. Try again.';
-  }
+  String _errorMessage(DioException e) => apiErrorMessage(e);
   // Get a single listing by ID
   Future<HousingListing> getListingDetails(int id) async {
     try {

@@ -18,9 +18,7 @@ class QuickActionsRow extends StatelessWidget {
         QuickAction(
           icon: Icons.group_outlined,
           label: 'Roommates',
-          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Matching coming soon')),
-          ),
+          onTap: () => context.push('/roommates'),
         ),
         const SizedBox(width: 10),
         QuickAction(

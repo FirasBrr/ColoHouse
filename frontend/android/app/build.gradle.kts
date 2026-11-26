@@ -2,16 +2,22 @@ plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    // Firebase (Auth, Firestore, Messaging) config from google-services.json
+    id("com.google.gms.google-services")
 }
 
 android {
     namespace = "com.example.front_colohouse"
-    compileSdk = flutter.compileSdkVersion
+    // 37 instead of Flutter's default 36: flutter_local_notifications 23 and androidx.core 1.19
+    // require it (compile-time only; targetSdk and minSdk are unchanged)
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // Required by flutter_local_notifications
+        isCoreLibraryDesugaringEnabled = true
     }
 
     defaultConfig {
@@ -46,4 +52,8 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 }

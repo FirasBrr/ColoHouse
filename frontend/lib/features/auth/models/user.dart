@@ -40,6 +40,7 @@ class User {
   final bool pushEnabled;
   final bool notifyRequests;
   final bool notifyMessages;
+  final String language; // 'en' | 'fr' | 'ar': language of the push texts
 
   User({
     required this.id,
@@ -56,6 +57,7 @@ class User {
     required this.pushEnabled,
     required this.notifyRequests,
     required this.notifyMessages,
+    this.language = 'en',
   });
 
   String get fullName => '$firstName $lastName'.trim();
@@ -74,6 +76,7 @@ class User {
     bool? pushEnabled,
     bool? notifyRequests,
     bool? notifyMessages,
+    String? language,
   }) =>
       User(
         id: id,
@@ -90,6 +93,7 @@ class User {
         pushEnabled: pushEnabled ?? this.pushEnabled,
         notifyRequests: notifyRequests ?? this.notifyRequests,
         notifyMessages: notifyMessages ?? this.notifyMessages,
+        language: language ?? this.language,
       );
 
   factory User.fromJson(Map<String, dynamic> json) => User(
@@ -109,6 +113,7 @@ class User {
         pushEnabled: json['push_enabled'] as bool? ?? true,
         notifyRequests: json['notify_requests'] as bool? ?? true,
         notifyMessages: json['notify_messages'] as bool? ?? true,
+        language: json['language'] as String? ?? 'en',
       );
 
   Map<String, dynamic> toJson() => {
@@ -135,5 +140,6 @@ class User {
         'push_enabled': pushEnabled,
         'notify_requests': notifyRequests,
         'notify_messages': notifyMessages,
+        'language': language,
       };
 }

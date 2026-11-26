@@ -31,6 +31,15 @@ class FakeStorage implements SecureStorage {
     access = null;
     refresh = null;
   }
+
+  @override
+  Future<void> savePendingNames(String email, String firstName, String lastName) async {}
+
+  @override
+  Future<(String?, String?)> pendingNamesFor(String? email) async => (null, null);
+
+  @override
+  Future<void> clearPendingNames() async {}
 }
 
 typedef Responder = Future<ResponseBody> Function(

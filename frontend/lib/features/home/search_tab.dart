@@ -8,6 +8,7 @@ import '../housing/models/listing_filters.dart';
 import '../housing/ui/widgets/listing_card.dart';
 import '../housing/ui/widgets/listing_filters_sheet.dart';
 import '../housing/ui/widgets/listings_map_view.dart';
+import '../matching/ui/widgets/matches_list.dart';
 import 'widgets/home_app_bar.dart'; // Imported for the consistent header
 
 class SearchTab extends ConsumerStatefulWidget {
@@ -190,9 +191,7 @@ class _SearchTabState extends ConsumerState<SearchTab> {
                       );
                     },
                   )
-                : Center(
-                    child: Text('Roommate matching coming soon!', style: TextStyle(color: context.colors.outline)),
-                  ),
+                : const MatchesList(),
           ),
         ],
       ),
